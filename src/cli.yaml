@@ -1,0 +1,25 @@
+name: ttv
+version: "0.1"
+author: Ben Sully <ben@bsull.io>
+about: "Flexibly create test, train and validation sets"
+args:
+- verbose:
+    short: v
+    multiple: true
+    help: Sets the level of verbosity
+subcommands:
+- split:
+    about: Split dataset into two or more files for train/test/validation sets
+    args:
+    - split_spec:
+        number_of_values: 1
+        required: true
+        multiple: true
+        takes_value: true
+        use_delimiter: false
+        short: s
+        long: split-spec
+        help: Names and proportions of each split
+    - INPUT:
+        required: true
+        help: Dataset file in CSV format (optionally gzipped)
