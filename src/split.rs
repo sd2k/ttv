@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
 
 use indicatif::ProgressBar;
 use log::info;
@@ -313,11 +312,21 @@ impl Splitter {
             output.write_all("\n".as_bytes())?;
         }
 
-        let outputs: Arc<Mutex<_>> = Arc::new(Mutex::new(self.outputs));
+        // let outputs: Arc<Mutex<_>> = Arc::new(Mutex::new(self.outputs));
 
-        let (tx, rx) = spmc::channel();
+        let (tx, rx) = std::sync::mpsc::channel::<(String, String)>();
+
+        let outputs = self.outputs;
 
         let mut handles = Vec::new();
+        handles.push(std::thread::spawn(move || {
+            let mut outputs = outputs;
+            for (split_name, record) in rx.iter() {
+                let output = outputs.get_mut(&split_name).expect("Could not find output");
+                output.write_all(&record.into_bytes()).expect("Could not write to file");
+                output.write_all("\n".as_bytes()).expect("Could not write to file");
+            }
+        }));
 
         info!("Writing to files");
         for result in lines {
@@ -329,21 +338,11 @@ impl Splitter {
             }
             let split = split.unwrap();
 
-            let rx = rx.clone();
-            let outputs = Arc::clone(&outputs);
-
-            handles.push(std::thread::spawn(move || {
-                let (split_name, record): (String, String) = rx.recv().expect("Could not receive message");
-                let mut outputs = outputs.lock().expect("Could not lock mutex");
-                let output = outputs.get_mut(&split_name).expect("Could not find output");
-                output.write_all(&record.into_bytes()).expect("Could not write to file");
-                output.write_all("\n".as_bytes()).expect("Could not write to file");
-            }));
-
             tx.send((split.to_string(), record)).expect("Could not send message");
         }
         info!("Finished writing to files");
 
+        drop(tx);
         for handle in handles {
             handle.join().unwrap();
         }
