@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use indicatif::ProgressBar;
 use log::info;
@@ -99,7 +100,7 @@ trait SplitSelector {
 
 /// Splits defined using proportions.
 struct ProportionSplits {
-    pub splits: Vec<ProportionSplit>,
+    splits: Vec<ProportionSplit>,
 }
 
 impl SplitSelector for ProportionSplits {
@@ -203,7 +204,7 @@ impl Splits {
     }
 
     /// Get a mapping from a split's name to its file.
-    pub fn splits(&self, data: &Path) -> Result<HashMap<String, GzWriter>> {
+    pub fn outputs(&self, data: &Path) -> Result<HashMap<String, GzWriter>> {
         match self {
             Splits::Rows(rows) => rows
                 .splits
@@ -268,7 +269,7 @@ impl SplitterBuilder {
         };
         let outputs: HashMap<String, GzWriter> = self
             .splits
-            .splits(&self.data)?;
+            .outputs(&self.data)?;
 
         Ok(Splitter {
             data: self.data,
@@ -291,7 +292,7 @@ pub struct Splitter {
 }
 
 impl Splitter {
-    pub fn run(&mut self) -> Result<()> {
+    pub fn run(mut self) -> Result<()> {
 
         let pb = match &self.splits {
             Splits::Proportions(_) => ProgressBar::new_spinner(),
@@ -312,6 +313,12 @@ impl Splitter {
             output.write_all("\n".as_bytes())?;
         }
 
+        let outputs: Arc<Mutex<_>> = Arc::new(Mutex::new(self.outputs));
+
+        let (tx, rx) = spmc::channel();
+
+        let mut handles = Vec::new();
+
         info!("Writing to files");
         for result in lines {
             pb.inc(1);
@@ -321,13 +328,25 @@ impl Splitter {
                 break;
             }
             let split = split.unwrap();
-            info!("Writing line to {}", split);
-            let output = self.outputs.get_mut(split).unwrap();
-            output.write_all(&record.into_bytes())?;
-            output.write_all("\n".as_bytes())?;
+
+            let rx = rx.clone();
+            let outputs = Arc::clone(&outputs);
+
+            handles.push(std::thread::spawn(move || {
+                let (split_name, record): (String, String) = rx.recv().expect("Could not receive message");
+                let mut outputs = outputs.lock().expect("Could not lock mutex");
+                let output = outputs.get_mut(&split_name).expect("Could not find output");
+                output.write_all(&record.into_bytes()).expect("Could not write to file");
+                output.write_all("\n".as_bytes()).expect("Could not write to file");
+            }));
+
+            tx.send((split.to_string(), record)).expect("Could not send message");
         }
         info!("Finished writing to files");
 
+        for handle in handles {
+            handle.join().unwrap();
+        }
         Ok(())
     }
 }
