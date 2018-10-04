@@ -1,3 +1,5 @@
+use std::fmt;
+
 /// Error type in ttv.
 #[derive(Debug)]
 pub enum Error {
@@ -26,5 +28,11 @@ impl From<std::num::ParseIntError> for Error {
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
         Error::IoError(error)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }

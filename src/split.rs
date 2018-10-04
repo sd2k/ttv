@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use indicatif::ProgressBar;
 use log::info;
@@ -11,11 +12,7 @@ use crate::io::{open_data, open_output, GzWriter};
 
 /// Represents a single 'split' of data
 trait Split {
-    /// Create a split from a string spec.
-    fn from_str(spec: &str) -> Result<Self>
-    where
-        Self: Sized;
-
+    /// Get the name of the split.
     fn name(&self) -> &str;
 
     /// Get the writer for this split.
@@ -29,7 +26,8 @@ trait Split {
 }
 
 /// A split based on a proportion.
-struct ProportionSplit {
+#[derive(Debug)]
+pub struct ProportionSplit {
     /// The split name. Will be used as the filename for the split.
     name: String,
     /// The proportion of data that should be directed to this split.
@@ -40,6 +38,10 @@ impl Split for ProportionSplit {
     fn name(&self) -> &str {
         return &self.name;
     }
+}
+
+impl FromStr for ProportionSplit {
+    type Err = Error;
 
     /// Create a ProportionSplit from a string specification, such as
     /// "train=0.8".
@@ -59,7 +61,8 @@ impl Split for ProportionSplit {
 }
 
 /// A split based on a number of rows
-struct RowSplit {
+#[derive(Debug)]
+pub struct RowSplit {
     /// The split name. Will be used as the filename for the split.
     name: String,
     /// The total number of rows to send to this split.
@@ -73,6 +76,10 @@ impl Split for RowSplit {
     fn name(&self) -> &str {
         return &self.name;
     }
+}
+
+impl FromStr for RowSplit {
+    type Err = Error;
 
     /// Create a ProportionSplit from a string specification, such as
     /// "train=0.8".
@@ -98,7 +105,8 @@ trait SplitSelector {
 }
 
 /// Splits defined using proportions.
-struct ProportionSplits {
+#[derive(Debug, Default)]
+pub struct ProportionSplits {
     splits: Vec<ProportionSplit>,
 }
 
@@ -116,8 +124,15 @@ impl SplitSelector for ProportionSplits {
     }
 }
 
+impl From<Vec<ProportionSplit>> for ProportionSplits {
+    fn from(splits: Vec<ProportionSplit>) -> Self {
+        ProportionSplits { splits }
+    }
+}
+
 /// Splits defined using rows.
-struct RowSplits {
+#[derive(Debug, Default)]
+pub struct RowSplits {
     splits: Vec<RowSplit>,
     /// The total number of rows in all splits combined
     total: f64,
@@ -149,59 +164,21 @@ impl SplitSelector for RowSplits {
     }
 }
 
+impl From<Vec<RowSplit>> for RowSplits {
+    fn from(splits: Vec<RowSplit>) -> Self {
+        let total = splits.iter().fold(0.0, |x, y| x + y.total);
+        RowSplits { splits, total }
+    }
+}
+
 /// Either RowSplits or ProportionSplits, determined at runtime depending
 /// on the user's input.
-enum Splits {
+pub enum Splits {
     Rows(RowSplits),
     Proportions(ProportionSplits),
 }
 
 impl Splits {
-    /// Attempt to parse the split specs first into rows, then proportions.
-    fn from_str(splits: &[&str]) -> Result<Self> {
-        let mut row_splits = Vec::new();
-        let mut total = 0.0;
-        for split in splits {
-            match RowSplit::from_str(split) {
-                Ok(s) => {
-                    total += s.total;
-                    row_splits.push(s);
-                }
-                Err(_) => {
-                    row_splits.clear();
-                    break;
-                }
-            }
-        }
-        if !row_splits.is_empty() {
-            let row_splits = RowSplits {
-                splits: row_splits,
-                total,
-            };
-            return Ok(Splits::Rows(row_splits));
-        }
-
-        let mut prop_splits = Vec::new();
-        for split in splits {
-            match ProportionSplit::from_str(split) {
-                Ok(s) => {
-                    prop_splits.push(s);
-                }
-                Err(_) => {
-                    prop_splits.clear();
-                    break;
-                }
-            }
-        }
-        if !prop_splits.is_empty() {
-            let prop_splits = ProportionSplits {
-                splits: prop_splits,
-            };
-            return Ok(Splits::Proportions(prop_splits));
-        }
-        Err(Error::InvalidSplitSpecifications(splits.join(",")))
-    }
-
     /// Get a mapping from a split's name to its file.
     pub fn outputs(&self, data: &Path) -> Result<HashMap<String, GzWriter>> {
         match self {
@@ -237,13 +214,21 @@ pub struct SplitterBuilder {
 }
 
 impl SplitterBuilder {
-    pub fn new<P: AsRef<Path>>(data: &P, splits: &[&str]) -> Result<Self> {
-        let splits = Splits::from_str(splits)?;
-        Ok(SplitterBuilder {
+    pub fn new<P: AsRef<Path>>(
+        data: &P,
+        row_splits: Vec<RowSplit>,
+        prop_splits: Vec<ProportionSplit>,
+    ) -> Self {
+        let splits = if row_splits.is_empty() {
+            Splits::Proportions(prop_splits.into())
+        } else {
+            Splits::Rows(row_splits.into())
+        };
+        SplitterBuilder {
             data: data.as_ref().to_path_buf(),
             splits,
             seed: None,
-        })
+        }
     }
 
     pub fn seed(mut self, seed: u64) -> Self {
@@ -266,14 +251,9 @@ impl SplitterBuilder {
             Some(s) => ChaChaRng::from_seed(s),
             None => ChaChaRng::from_entropy(),
         };
-        let outputs: HashMap<String, GzWriter> = self
-            .splits
-            .outputs(&self.data)?;
-
         Ok(Splitter {
             data: self.data,
             rng,
-            outputs,
             splits: self.splits,
         })
     }
@@ -284,14 +264,16 @@ pub struct Splitter {
     data: PathBuf,
     /// The desired splits
     splits: Splits,
-    /// The outputs for the splits
-    outputs: HashMap<String, GzWriter>,
     /// The stateful random number generator.
     rng: ChaChaRng,
 }
 
 impl Splitter {
     pub fn run(mut self) -> Result<()> {
+
+        let mut outputs: HashMap<String, GzWriter> = self
+            .splits
+            .outputs(&self.data)?;
 
         let pb = match &self.splits {
             Splits::Proportions(_) => ProgressBar::new_spinner(),
@@ -307,7 +289,7 @@ impl Splitter {
             None => return Err(Error::EmptyFile),
             Some(res) => res?,
         };
-        for output in self.outputs.values_mut() {
+        for output in outputs.values_mut() {
             output.write_all(&header.clone().into_bytes())?;
             output.write_all("\n".as_bytes())?;
         }
@@ -316,7 +298,7 @@ impl Splitter {
 
         let (tx, rx) = std::sync::mpsc::channel::<(String, String)>();
 
-        let outputs = self.outputs;
+        let outputs = outputs;
 
         let mut handles = Vec::new();
         handles.push(std::thread::spawn(move || {

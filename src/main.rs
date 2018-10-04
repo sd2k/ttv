@@ -1,25 +1,19 @@
-use clap::{load_yaml, App};
 use env_logger;
+use structopt::StructOpt;
 
-use ttv::{Result, SplitterBuilder};
+use ttv::{cli, SplitterBuilder, Result};
 
 fn main() -> Result<()> {
     env_logger::init();
-    let yaml = load_yaml!("cli.yaml");
-    let mut app = App::from_yaml(yaml);
-    match app.clone().get_matches().subcommand() {
-        ("split", Some(sub_m)) => {
-            let name: &str = sub_m.value_of("INPUT").unwrap();
-            let splits: Vec<&str> = sub_m.values_of("split_spec").unwrap().collect();
-            let mut splitter = SplitterBuilder::new(&name, &splits)?;
-            if let Some(seed) = sub_m.value_of("seed") {
-                splitter = splitter.seed(seed.parse::<u64>()?);
+    let opt = cli::Opt::from_args();
+    match opt.cmd {
+        cli::Command::Split(x) => {
+            let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits);
+            if let Some(seed) = x.seed {
+                splitter = splitter.seed(seed);
             }
             splitter.build()?.run()?;
         },
-        _ => {
-            app.print_help().expect("Could not print help");
-        }
     };
     Ok(())
 }
