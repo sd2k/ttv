@@ -3,7 +3,7 @@ use std::io::{BufRead, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use indicatif::ProgressBar;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::info;
 use rand::{prelude::*, prng::ChaChaRng};
 
@@ -275,9 +275,36 @@ impl Splitter {
             .splits
             .outputs(&self.data)?;
 
-        let pb = match &self.splits {
-            Splits::Proportions(_) => ProgressBar::new_spinner(),
-            Splits::Rows(r) => ProgressBar::new(r.total as u64)
+        let multi = MultiProgress::new();
+        let progress: HashMap<String, ProgressBar> = match &self.splits {
+            Splits::Proportions(p) => p
+                .splits
+                .iter()
+                .map(|p| {
+                    let style = ProgressStyle::default_bar()
+                        .template("{msg:<10}: [{elapsed_precise}] {spinner:.green} {pos:>7}");
+                    let pb = multi.add(ProgressBar::new_spinner());
+                    // pb.set_draw_delta(1);  // uncomment when indicatif 0.9.1 is released
+                    pb.enable_steady_tick(200);
+                    pb.set_style(style);
+                    pb.set_message(&p.name);
+                    (p.name.clone(), pb)
+                })
+                .collect(),
+            Splits::Rows(r) => r
+                .splits
+                .iter()
+                .map(|r| {
+                    let style = ProgressStyle::default_bar()
+                        .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} (ETA: {eta_precise})")
+                        .progress_chars("█▉▊▋▌▍▎▏  ");
+                    let pb = multi.add(ProgressBar::new(r.total as u64));
+                    pb.enable_steady_tick(200);
+                    pb.set_message(&r.name);
+                    pb.set_style(style);
+                    (r.name.clone(), pb)
+                })
+                .collect()
         };
 
         info!("Reading data from {}", self.data.to_str().unwrap());
@@ -294,11 +321,7 @@ impl Splitter {
             output.write_all("\n".as_bytes())?;
         }
 
-        // let outputs: Arc<Mutex<_>> = Arc::new(Mutex::new(self.outputs));
-
         let (tx, rx) = std::sync::mpsc::channel::<(String, String)>();
-
-        let outputs = outputs;
 
         let mut handles = Vec::new();
         handles.push(std::thread::spawn(move || {
@@ -310,18 +333,22 @@ impl Splitter {
             }
         }));
 
-        info!("Writing to files");
+        std::thread::spawn(move || {
+            multi.join().unwrap();
+        });
+
+        // progress.values().next().unwrap().println("Writing to files");  // uncomment when indicatif 0.9.1 is released
         for result in lines {
-            pb.inc(1);
             let record = result?;
             let split = self.splits.get_split(&mut self.rng);
             if split.is_none() {
                 break;
             }
             let split = split.unwrap();
-
             tx.send((split.to_string(), record)).expect("Could not send message");
+            progress[split].inc(1);
         }
+        progress.values().for_each(|f| f.finish());
         info!("Finished writing to files");
 
         drop(tx);
