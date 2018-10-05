@@ -211,6 +211,10 @@ pub struct SplitterBuilder {
     splits: Splits,
     /// The seed used for randomisation
     seed: Option<[u8; 32]>,
+    /// The maximum size of each chunk
+    chunk_size: Option<u64>,
+    /// The total number of rows
+    total_rows: Option<u64>,
 }
 
 impl SplitterBuilder {
@@ -228,6 +232,8 @@ impl SplitterBuilder {
             data: data.as_ref().to_path_buf(),
             splits,
             seed: None,
+            chunk_size: None,
+            total_rows: None,
         }
     }
 
@@ -246,6 +252,16 @@ impl SplitterBuilder {
         self
     }
 
+    pub fn chunk_size(mut self, chunk_size: u64) -> Self {
+        self.chunk_size = Some(chunk_size);
+        self
+    }
+
+    pub fn total_rows(mut self, total_rows: u64) -> Self {
+        self.total_rows = Some(total_rows);
+        self
+    }
+
     pub fn build(self) -> Result<Splitter> {
         let rng = match self.seed {
             Some(s) => ChaChaRng::from_seed(s),
@@ -255,6 +271,8 @@ impl SplitterBuilder {
             data: self.data,
             rng,
             splits: self.splits,
+            chunk_size: self.chunk_size,
+            total_rows: self.total_rows,
         })
     }
 }
@@ -266,6 +284,10 @@ pub struct Splitter {
     splits: Splits,
     /// The stateful random number generator.
     rng: ChaChaRng,
+    /// The maximum size of each chunk
+    chunk_size: Option<u64>,
+    /// The total number of rows
+    total_rows: Option<u64>,
 }
 
 impl Splitter {
@@ -276,8 +298,23 @@ impl Splitter {
             .outputs(&self.data)?;
 
         let multi = MultiProgress::new();
-        let progress: HashMap<String, ProgressBar> = match &self.splits {
-            Splits::Proportions(p) => p
+        let progress: HashMap<String, ProgressBar> = match (&self.splits, self.total_rows) {
+            (Splits::Proportions(p), Some(t)) => p
+                .splits
+                .iter()
+                .map(|p| {
+                    let style = ProgressStyle::default_bar()
+                        .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} (ETA: {eta_precise})")
+                        .progress_chars("█▉▊▋▌▍▎▏  ");
+                    let split_total = p.proportion * t as f64;
+                    let pb = multi.add(ProgressBar::new(split_total as u64));
+                    pb.enable_steady_tick(200);
+                    pb.set_message(&p.name);
+                    pb.set_style(style);
+                    (p.name.clone(), pb)
+                })
+                .collect(),
+            (Splits::Proportions(p), None) => p
                 .splits
                 .iter()
                 .map(|p| {
@@ -291,7 +328,7 @@ impl Splitter {
                     (p.name.clone(), pb)
                 })
                 .collect(),
-            Splits::Rows(r) => r
+            (Splits::Rows(r), _) => r
                 .splits
                 .iter()
                 .map(|r| {

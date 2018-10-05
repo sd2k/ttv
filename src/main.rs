@@ -12,6 +12,12 @@ fn main() -> Result<()> {
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
             }
+            if let Some(chunk_size) = x.chunk_size {
+                splitter = splitter.chunk_size(chunk_size);
+            }
+            if let Some(total_rows) = x.total_rows {
+                splitter = splitter.total_rows(total_rows);
+            }
             splitter.build()?.run()?;
         },
     };
