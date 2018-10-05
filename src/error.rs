@@ -1,14 +1,17 @@
 use std::fmt;
 
+use crate::split::ProportionSplit;
+
 /// Error type in ttv.
 #[derive(Debug)]
 pub enum Error {
     EmptyFile,
     InvalidSplitSpecification(String),
-    InvalidSplitSpecifications(String),
+    InvalidSplits(Vec<ProportionSplit>),
     IoError(std::io::Error),
     ParseFloatError(std::num::ParseFloatError),
     ParseIntError(std::num::ParseIntError),
+    SendError(std::sync::mpsc::SendError<String>),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -28,6 +31,12 @@ impl From<std::num::ParseIntError> for Error {
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
         Error::IoError(error)
+    }
+}
+
+impl From<std::sync::mpsc::SendError<String>> for Error {
+    fn from(error: std::sync::mpsc::SendError<String>) -> Self {
+        Error::SendError(error)
     }
 }
 

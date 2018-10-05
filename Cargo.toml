@@ -6,10 +6,12 @@ edition = "2018"
 
 [dependencies]
 clap = { version = "2.32.0", features = ["yaml"] }
-flate2 = "1.0.2"
-log = "0.4.5"
 env_logger = "0.5.13"
+flate2 = "1.0.2"
+indicatif = { git = "https://github.com/mitsuhiko/indicatif" }
+log = "0.4.5"
+pad = "0.1"
 rand = "0.5.5"
-indicatif = "0.9.0"
+rayon = "1"
 spmc = "0.2"
 structopt = "0.2"
