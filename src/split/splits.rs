@@ -6,7 +6,6 @@ use rand::{prelude::*, prng::ChaChaRng};
 use crate::error::{Error, Result};
 use crate::split::single::{ProportionSplit, RowSplit, Split};
 
-
 pub trait SplitSelector {
     fn get_split(&mut self, rng: &mut ChaChaRng) -> Option<&str>;
 }
@@ -43,7 +42,7 @@ impl TryFrom<Vec<ProportionSplit>> for ProportionSplits {
     fn try_from(splits: Vec<ProportionSplit>) -> Result<Self> {
         let total = splits.iter().fold(0.0, |x, p| x + p.proportion);
         if total != 1.0 {
-            return Err(Error::InvalidSplits(splits))
+            return Err(Error::InvalidSplits(splits));
         }
         Ok(ProportionSplits { splits })
     }

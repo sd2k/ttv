@@ -2,14 +2,19 @@ use std::path::PathBuf;
 
 use structopt::StructOpt;
 
-use crate::split::{RowSplit, ProportionSplit};
-
+use crate::split::{ProportionSplit, RowSplit};
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "ttv", about = "Flexibly create test, train and validation sets")]
+#[structopt(
+    name = "ttv",
+    about = "Flexibly create test, train and validation sets"
+)]
 pub struct Opt {
-
-    #[structopt(parse(from_occurrences), short = "v", help = "Set the level of verbosity")]
+    #[structopt(
+        parse(from_occurrences),
+        short = "v",
+        help = "Set the level of verbosity"
+    )]
     pub verbose: u64,
 
     #[structopt(subcommand)]
@@ -18,7 +23,6 @@ pub struct Opt {
 
 #[derive(Debug, StructOpt)]
 pub enum Command {
-
     #[structopt(
         name = "split",
         about = "Split dataset into two or more files for test/train/validation sets",

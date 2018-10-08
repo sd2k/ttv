@@ -11,10 +11,9 @@ use crate::error::{Error, Result};
 use crate::io::open_data;
 use crate::split::{
     single::{ProportionSplit, RowSplit, Split, SplitEnum},
-    splits::{Splits},
+    splits::Splits,
     writer::SplitWriter,
 };
-
 
 pub struct SplitterBuilder {
     /// The path to the input file
@@ -126,7 +125,6 @@ pub struct Splitter {
 
 impl Splitter {
     pub fn run(mut self) -> Result<()> {
-
         let multi = MultiProgress::new();
 
         // Use a slightly different progress bar depending on the situation
@@ -185,18 +183,28 @@ impl Splitter {
         match &self.splits {
             Splits::Proportions(p) => for split in p.iter() {
                 let split = SplitEnum::Proportion((*split).clone());
-                let (split_sender, mut split_chunk_writers) =
-                    SplitWriter::new(&output_path, &split, self.chunk_size, self.total_rows, self.compressed)?;
+                let (split_sender, mut split_chunk_writers) = SplitWriter::new(
+                    &output_path,
+                    &split,
+                    self.chunk_size,
+                    self.total_rows,
+                    self.compressed,
+                )?;
                 senders.insert(split.name().to_string(), split_sender);
                 chunk_writers.append(&mut split_chunk_writers);
             },
             Splits::Rows(r) => for split in r.iter() {
                 let split = SplitEnum::Rows((*split).clone());
-                let (split_sender, mut split_chunk_writers) =
-                    SplitWriter::new(&output_path, &split, self.chunk_size, self.total_rows, self.compressed)?;
+                let (split_sender, mut split_chunk_writers) = SplitWriter::new(
+                    &output_path,
+                    &split,
+                    self.chunk_size,
+                    self.total_rows,
+                    self.compressed,
+                )?;
                 senders.insert(split.name().to_string(), split_sender);
                 chunk_writers.append(&mut split_chunk_writers);
-            }
+            },
         };
 
         let pool = rayon::ThreadPoolBuilder::new()
@@ -208,7 +216,6 @@ impl Splitter {
             .unwrap();
 
         pool.scope(move |scope| {
-
             info!("Reading data from {}", self.input.to_str().unwrap());
             let reader = open_data(&self.input)?;
 
@@ -240,12 +247,14 @@ impl Splitter {
                                     // This should only ever happen if we weren't
                                     // able to pre-calculate how many chunks were
                                     // needed
-                                    chunk_id = chunk_id.map(|c| c+2);
+                                    chunk_id = chunk_id.map(|c| c + 2);
                                     file = writer.output(chunk_id).expect("Could not open file");
                                     rows_sent_to_chunk = 0;
                                 }
                             }
-                            writer.handle_row(&mut file, row).expect("Could not write row to file");
+                            writer
+                                .handle_row(&mut file, row)
+                                .expect("Could not write row to file");
                             rows_sent_to_chunk += 1;
                         }
                     })
@@ -261,7 +270,7 @@ impl Splitter {
                 let split = split.unwrap();
                 match senders.get_mut(split).unwrap().send(record.unwrap()) {
                     Ok(_) => progress[split].inc(1),
-                    Err(e) => return Err(e)
+                    Err(e) => return Err(e),
                 }
             }
             progress.values().for_each(|f| f.finish());

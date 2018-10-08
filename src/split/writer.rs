@@ -5,10 +5,9 @@ use std::sync::mpsc::{Receiver, SyncSender};
 
 use pad::{Alignment, PadStr};
 
+use super::single::SplitEnum;
 use crate::error::Result;
 use crate::io;
-use super::single::SplitEnum;
-
 
 /// Accepts rows assigned to a split and writes them in an appropriate way.
 ///
@@ -26,7 +25,6 @@ pub(crate) struct SplitWriter {
 }
 
 impl SplitWriter {
-
     pub fn new<'scope>(
         path: &PathBuf,
         split: &SplitEnum,
@@ -48,7 +46,9 @@ impl SplitWriter {
 
             // Use as many senders as we estimate there will be chunks for this
             // split.
-            (SplitEnum::Proportion(p), Some(c), Some(t)) => ((t as f64) * p.proportion / c as f64).ceil() as u64 + 1,
+            (SplitEnum::Proportion(p), Some(c), Some(t)) => {
+                ((t as f64) * p.proportion / c as f64).ceil() as u64 + 1
+            }
         };
 
         let mut chunk_senders = Vec::new();
@@ -57,7 +57,11 @@ impl SplitWriter {
             let (sender, receiver) = std::sync::mpsc::sync_channel(100);
             chunk_senders.push(sender);
 
-            let chunk_id = if n_chunks == 1 { None } else { Some(chunk_id as u64) };
+            let chunk_id = if n_chunks == 1 {
+                None
+            } else {
+                Some(chunk_id as u64)
+            };
             let chunk_writer = ChunkWriter::new(
                 path.clone(),
                 split.name().to_string(),
@@ -69,7 +73,13 @@ impl SplitWriter {
             chunk_writers.push(chunk_writer);
         }
 
-        Ok((SplitWriter { chunk_senders, next_index: 0 }, chunk_writers))
+        Ok((
+            SplitWriter {
+                chunk_senders,
+                next_index: 0,
+            },
+            chunk_writers,
+        ))
     }
 
     /// Send a row to this split.
@@ -82,7 +92,7 @@ impl SplitWriter {
             Some(sender) => {
                 sender.send(row)?;
                 self.next_index += 1;
-            },
+            }
             None => {
                 // Start again at the first next chunk
                 self.chunk_senders[0].send(row)?;
@@ -128,7 +138,14 @@ impl ChunkWriter {
         chunk_size: Option<u64>,
         receiver: Receiver<String>,
     ) -> Self {
-        ChunkWriter { path, name, compressed, chunk_id, chunk_size, receiver }
+        ChunkWriter {
+            path,
+            name,
+            compressed,
+            chunk_id,
+            chunk_size,
+            receiver,
+        }
     }
 
     pub fn output(&self, chunk_id: Option<u64>) -> Result<io::OutputWriter> {
@@ -139,7 +156,7 @@ impl ChunkWriter {
         create_dir_all(&filename)?;
         let chunk_part = match chunk_id {
             None => "".to_string(),
-            Some(c) => format!(".{}", c.to_string().pad(4, '0', Alignment::Right, false))
+            Some(c) => format!(".{}", c.to_string().pad(4, '0', Alignment::Right, false)),
         };
         filename.push(format!(
             "{}.{}{}.csv{}",

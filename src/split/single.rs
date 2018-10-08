@@ -3,7 +3,6 @@ use std::str::FromStr;
 
 use crate::error::{Error, Result};
 
-
 /// Represents a single 'split' of data
 pub trait Split {
     /// Get the name of the split.

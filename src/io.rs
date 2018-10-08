@@ -15,14 +15,18 @@ pub fn open_data<P: AsRef<Path>>(path: P) -> Result<InputReader> {
     let reader: Box<Read> = match path.as_ref().to_str() {
         Some(p) if p == "-" => {
             Box::new(std::io::stdin())
-        },
+        }
         Some(p) => Box::new(File::open(p)?),
         _ => unreachable!(),
     };
 
     let gz = GzDecoder::new(reader);
     let is_compressed = gz.header().is_some();
-    let final_reader: Box<Read> = if is_compressed { Box::new(gz) } else { Box::new(gz.into_inner()) };
+    let final_reader: Box<Read> = if is_compressed {
+        Box::new(gz)
+    } else {
+        Box::new(gz.into_inner())
+    };
     Ok(BufReader::with_capacity(1024 * 1024, final_reader))
 }
 

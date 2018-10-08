@@ -1,7 +1,7 @@
 use env_logger;
 use structopt::StructOpt;
 
-use ttv::{cli, SplitterBuilder, Result};
+use ttv::{cli, Result, SplitterBuilder};
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -23,7 +23,7 @@ fn main() -> Result<()> {
                 splitter = splitter.total_rows(total_rows);
             }
             splitter.build()?.run()?;
-        },
+        }
     };
     Ok(())
 }
