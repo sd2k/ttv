@@ -37,7 +37,7 @@ impl SplitWriter {
             (_, None, _) => 1,
 
             // Create one sender per chunk.
-            (SplitEnum::Rows(r), Some(c), _) => (r.total / c as f64).ceil() as u64 + 1,
+            (SplitEnum::Rows(r), Some(c), _) => (r.total / c as f64).ceil() as u64,
 
             // TODO:
             // We don't know how many chunks will be required. Create two
