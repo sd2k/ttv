@@ -29,6 +29,8 @@ pub struct SplitterBuilder {
     chunk_size: Option<u64>,
     /// The total number of rows
     total_rows: Option<u64>,
+    /// Whether to compress output files
+    compressed: bool,
 }
 
 impl SplitterBuilder {
@@ -49,6 +51,7 @@ impl SplitterBuilder {
             output_prefix: None,
             chunk_size: None,
             total_rows: None,
+            compressed: false,
         })
     }
 
@@ -82,6 +85,11 @@ impl SplitterBuilder {
         self
     }
 
+    pub fn compressed(mut self, compressed: bool) -> Self {
+        self.compressed = compressed;
+        self
+    }
+
     pub fn build(self) -> Result<Splitter> {
         let rng = match self.seed {
             Some(s) => ChaChaRng::from_seed(s),
@@ -94,6 +102,7 @@ impl SplitterBuilder {
             output_prefix: self.output_prefix,
             chunk_size: self.chunk_size,
             total_rows: self.total_rows,
+            compressed: self.compressed,
         })
     }
 }
@@ -111,6 +120,8 @@ pub struct Splitter {
     chunk_size: Option<u64>,
     /// The total number of rows
     total_rows: Option<u64>,
+    /// Whether to compress output files
+    compressed: bool,
 }
 
 impl Splitter {
@@ -175,14 +186,14 @@ impl Splitter {
             Splits::Proportions(p) => for split in p.iter() {
                 let split = SplitEnum::Proportion((*split).clone());
                 let (split_sender, mut split_chunk_writers) =
-                    SplitWriter::new(&output_path, &split, self.chunk_size, self.total_rows)?;
+                    SplitWriter::new(&output_path, &split, self.chunk_size, self.total_rows, self.compressed)?;
                 senders.insert(split.name().to_string(), split_sender);
                 chunk_writers.append(&mut split_chunk_writers);
             },
             Splits::Rows(r) => for split in r.iter() {
                 let split = SplitEnum::Rows((*split).clone());
                 let (split_sender, mut split_chunk_writers) =
-                    SplitWriter::new(&output_path, &split, self.chunk_size, self.total_rows)?;
+                    SplitWriter::new(&output_path, &split, self.chunk_size, self.total_rows, self.compressed)?;
                 senders.insert(split.name().to_string(), split_sender);
                 chunk_writers.append(&mut split_chunk_writers);
             }

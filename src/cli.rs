@@ -82,4 +82,11 @@ pub struct Split {
         help = "Output filename prefix. Only used if reading from stdin",
     )]
     pub output_prefix: Option<PathBuf>,
+
+    #[structopt(
+        short = "u",
+        long = "uncompressed",
+        help = "Write output files uncompressed"
+    )]
+    pub uncompressed: bool,
 }

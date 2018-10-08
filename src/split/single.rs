@@ -1,24 +1,13 @@
 use std::ops::Deref;
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use crate::error::{Error, Result};
-use crate::io::{open_output, GzWriter};
 
 
 /// Represents a single 'split' of data
 pub trait Split {
     /// Get the name of the split.
     fn name(&self) -> &str;
-
-    /// Get the writer for this split.
-    fn writer(&self, path: &PathBuf) -> Result<GzWriter> {
-        let mut filename = path.clone();
-        filename.pop();
-        filename.push(self.name());
-        filename.set_extension("csv.gz");
-        open_output(filename)
-    }
 }
 
 /// A split based on a proportion.

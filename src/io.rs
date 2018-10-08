@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufReader, Read};
+use std::io::{BufReader, Read, Write};
 use std::path::Path;
 
 use flate2::read::GzDecoder;
@@ -8,7 +8,7 @@ use flate2::write::GzEncoder;
 use crate::error::Result;
 
 pub type InputReader = BufReader<Box<Read>>;
-pub type GzWriter = GzEncoder<File>;
+pub type OutputWriter = Box<Write>;
 
 pub fn open_data<P: AsRef<Path>>(path: P) -> Result<InputReader> {
     // Read from stdin if input is '-', else try to open the provided file.
@@ -26,7 +26,12 @@ pub fn open_data<P: AsRef<Path>>(path: P) -> Result<InputReader> {
     Ok(BufReader::with_capacity(1024 * 1024, final_reader))
 }
 
-pub fn open_output<P: AsRef<Path>>(path: P) -> Result<GzWriter> {
+pub fn open_output<P: AsRef<Path>>(path: P, compressed: bool) -> Result<OutputWriter> {
     let file = File::create(path)?;
-    Ok(GzWriter::new(file, Default::default()))
+    let writer: OutputWriter = if compressed {
+        Box::new(GzEncoder::new(file, Default::default()))
+    } else {
+        Box::new(file)
+    };
+    Ok(writer)
 }

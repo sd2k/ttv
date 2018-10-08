@@ -32,6 +32,7 @@ impl SplitWriter {
         split: &SplitEnum,
         chunk_size: Option<u64>,
         total_rows: Option<u64>,
+        compressed: bool,
     ) -> Result<(Self, Vec<ChunkWriter>)> {
         let n_chunks = match (split, chunk_size, total_rows) {
             // Just use one sender since there is no chunking required.
@@ -60,6 +61,7 @@ impl SplitWriter {
             let chunk_writer = ChunkWriter::new(
                 path.clone(),
                 split.name().to_string(),
+                compressed,
                 chunk_id,
                 chunk_size,
                 receiver,
@@ -111,6 +113,7 @@ impl SplitWriter {
 pub struct ChunkWriter {
     path: PathBuf,
     name: String,
+    compressed: bool,
     pub chunk_id: Option<u64>,
     pub chunk_size: Option<u64>,
     pub receiver: Receiver<String>,
@@ -120,14 +123,15 @@ impl ChunkWriter {
     fn new(
         path: PathBuf,
         name: String,
+        compressed: bool,
         chunk_id: Option<u64>,
         chunk_size: Option<u64>,
         receiver: Receiver<String>,
     ) -> Self {
-        ChunkWriter { path, name, chunk_id, chunk_size, receiver }
+        ChunkWriter { path, name, compressed, chunk_id, chunk_size, receiver }
     }
 
-    pub fn output(&self, chunk_id: Option<u64>) -> Result<io::GzWriter> {
+    pub fn output(&self, chunk_id: Option<u64>) -> Result<io::OutputWriter> {
         let mut filename = self.path.clone();
         let original_filename = self.path.file_stem().unwrap();
         filename.pop();
@@ -138,15 +142,16 @@ impl ChunkWriter {
             Some(c) => format!(".{}", c.to_string().pad(4, '0', Alignment::Right, false))
         };
         filename.push(format!(
-            "{}.{}{}.csv.gz",
+            "{}.{}{}.csv{}",
             original_filename.to_string_lossy(),
             &self.name,
             chunk_part,
+            if self.compressed { ".gz" } else { "" },
         ));
-        io::open_output(filename)
+        io::open_output(filename, self.compressed)
     }
     /// Handle writing of a row to this chunk.
-    pub fn handle_row(&self, file: &mut io::GzWriter, row: String) -> Result<()> {
+    pub fn handle_row(&self, file: &mut io::OutputWriter, row: String) -> Result<()> {
         file.write_all(row.as_bytes())?;
         file.write_all(b"\n")?;
         Ok(())

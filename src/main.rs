@@ -8,7 +8,8 @@ fn main() -> Result<()> {
     let opt = cli::Opt::from_args();
     match opt.cmd {
         cli::Command::Split(x) => {
-            let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits)?;
+            let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits)?
+                .compressed(!x.uncompressed);
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
             }
