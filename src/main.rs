@@ -12,6 +12,9 @@ fn main() -> Result<()> {
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
             }
+            if let Some(output_prefix) = x.output_prefix {
+                splitter = splitter.output_prefix(output_prefix);
+            }
             if let Some(chunk_size) = x.chunk_size {
                 splitter = splitter.chunk_size(chunk_size);
             }

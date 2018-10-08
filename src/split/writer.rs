@@ -58,7 +58,7 @@ impl SplitWriter {
 
             let chunk_id = if n_chunks == 1 { None } else { Some(chunk_id as u64) };
             let chunk_writer = ChunkWriter::new(
-                path.to_path_buf(),
+                path.clone(),
                 split.name().to_string(),
                 chunk_id,
                 chunk_size,

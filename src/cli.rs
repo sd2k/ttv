@@ -70,8 +70,16 @@ pub struct Split {
 
     #[structopt(
         parse(from_os_str),
-        raw(requires_if = r#""-", "filename""#),
+        raw(requires_if = r#""-", "output_prefix""#),
         help = "Data to split, optionally gzip compressed. If '-', read from stdin",
     )]
     pub input: PathBuf,
+
+    #[structopt(
+        short = "o",
+        long = "output-prefix",
+        parse(from_os_str),
+        help = "Output filename prefix. Only used if reading from stdin",
+    )]
+    pub output_prefix: Option<PathBuf>,
 }

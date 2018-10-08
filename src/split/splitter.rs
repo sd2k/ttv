@@ -23,6 +23,8 @@ pub struct SplitterBuilder {
     splits: Splits,
     /// The seed used for randomisation
     seed: Option<[u8; 32]>,
+    /// The prefix for the output file(s)
+    output_prefix: Option<PathBuf>,
     /// The maximum size of each chunk
     chunk_size: Option<u64>,
     /// The total number of rows
@@ -44,6 +46,7 @@ impl SplitterBuilder {
             input: input.as_ref().to_path_buf(),
             splits,
             seed: None,
+            output_prefix: None,
             chunk_size: None,
             total_rows: None,
         })
@@ -61,6 +64,11 @@ impl SplitterBuilder {
         array[6] = user_seed[6];
         array[7] = user_seed[7];
         self.seed = Some(array);
+        self
+    }
+
+    pub fn output_prefix(mut self, output_prefix: PathBuf) -> Self {
+        self.output_prefix = Some(output_prefix);
         self
     }
 
@@ -83,6 +91,7 @@ impl SplitterBuilder {
             input: self.input,
             rng,
             splits: self.splits,
+            output_prefix: self.output_prefix,
             chunk_size: self.chunk_size,
             total_rows: self.total_rows,
         })
@@ -96,6 +105,8 @@ pub struct Splitter {
     splits: Splits,
     /// The stateful random number generator.
     rng: ChaChaRng,
+    /// The prefix for the output file(s)
+    output_prefix: Option<PathBuf>,
     /// The maximum size of each chunk
     chunk_size: Option<u64>,
     /// The total number of rows
@@ -118,7 +129,7 @@ impl Splitter {
                         .progress_chars("█▉▊▋▌▍▎▏  ");
                     let split_total = p.proportion * t as f64;
                     let pb = multi.add(ProgressBar::new(split_total as u64));
-                    pb.set_draw_delta(1000);  // uncomment when indicatif 0.9.1 is released
+                    pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
                     pb.set_message(&p.name());
                     pb.set_style(style);
                     (p.name().to_string(), pb)
@@ -131,7 +142,7 @@ impl Splitter {
                     let style = ProgressStyle::default_bar()
                         .template("{msg:<10}: [{elapsed_precise}] {spinner:.green} {pos:>7}");
                     let pb = multi.add(ProgressBar::new_spinner());
-                    pb.set_draw_delta(1000);  // uncomment when indicatif 0.9.1 is released
+                    pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
                     pb.set_style(style);
                     pb.set_message(&p.name());
                     (p.name().to_string(), pb)
@@ -145,7 +156,7 @@ impl Splitter {
                         .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} (ETA: {eta_precise})")
                         .progress_chars("█▉▊▋▌▍▎▏  ");
                     let pb = multi.add(ProgressBar::new(r.total as u64));
-                    pb.set_draw_delta(1000);  // uncomment when indicatif 0.9.1 is released
+                    pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
                     pb.set_message(&r.name());
                     pb.set_style(style);
                     (r.name().to_string().clone(), pb)
@@ -153,13 +164,13 @@ impl Splitter {
                 .collect()
         };
 
-        info!("Reading data from {}", self.input.to_str().unwrap());
-        let reader = open_data(&self.input)?;
-
         // Change this to create senders instead
         let mut senders = HashMap::new();
         let mut chunk_writers = Vec::new();
-        let output_path = self.input.clone();
+        let output_path = match self.output_prefix {
+            Some(ref f) => f.clone(),
+            None => self.input.clone(),
+        };
         match &self.splits {
             Splits::Proportions(p) => for split in p.iter() {
                 let split = SplitEnum::Proportion((*split).clone());
@@ -177,16 +188,6 @@ impl Splitter {
             }
         };
 
-        info!("Writing header to files");
-        let mut lines = reader.lines();
-        let header = match lines.next() {
-            None => return Err(Error::EmptyFile),
-            Some(res) => res?,
-        };
-        for sender in senders.values_mut() {
-            sender.send_all(header.clone())?;
-        }
-
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(chunk_writers.len() + 2)
             .thread_name(|num| format!("thread-{}", num))
@@ -196,6 +197,20 @@ impl Splitter {
             .unwrap();
 
         pool.scope(move |scope| {
+
+            info!("Reading data from {}", self.input.to_str().unwrap());
+            let reader = open_data(&self.input)?;
+
+            info!("Writing header to files");
+            let mut lines = reader.lines();
+            let header = match lines.next() {
+                None => return Err(Error::EmptyFile),
+                Some(res) => res?,
+            };
+            for sender in senders.values_mut() {
+                sender.send_all(header.clone())?;
+            }
+
             scope.spawn(move |_| multi.join().unwrap());
             {
                 for writer in chunk_writers {
@@ -226,6 +241,7 @@ impl Splitter {
                 }
             }
 
+            info!("Reading lines");
             for record in lines {
                 let split = self.splits.get_split(&mut self.rng);
                 if split.is_none() {
