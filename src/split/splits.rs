@@ -6,9 +6,17 @@ use rand::{prelude::*, prng::ChaChaRng};
 use crate::error::{Error, Result};
 use crate::split::single::{ProportionSplit, RowSplit, Split};
 
-pub trait SplitSelector {
-    fn get_split(&mut self, rng: &mut ChaChaRng) -> Option<&str>;
+pub enum SplitSelection<'a> {
+    Some(&'a str),
+    None,
+    Done,
 }
+
+pub trait SplitSelector {
+    fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection;
+}
+
+
 
 /// Splits defined using proportions.
 #[derive(Debug, Default)]
@@ -17,16 +25,16 @@ pub struct ProportionSplits {
 }
 
 impl SplitSelector for ProportionSplits {
-    fn get_split(&mut self, rng: &mut ChaChaRng) -> Option<&str> {
+    fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection {
         let random: f64 = rng.gen();
         let mut total = 0.0;
         for split in &self.splits {
             total += split.proportion;
             if random < total {
-                return Some(&split.name());
+                return SplitSelection::Some(&split.name());
             }
         }
-        unreachable!()
+        return SplitSelection::None;
     }
 }
 
@@ -41,7 +49,7 @@ impl TryFrom<Vec<ProportionSplit>> for ProportionSplits {
     type Error = Error;
     fn try_from(splits: Vec<ProportionSplit>) -> Result<Self> {
         let total = splits.iter().fold(0.0, |x, p| x + p.proportion);
-        if total != 1.0 {
+        if total > 1.0 {
             return Err(Error::InvalidSplits(splits));
         }
         Ok(ProportionSplits { splits })
@@ -57,7 +65,7 @@ pub struct RowSplits {
 }
 
 impl SplitSelector for RowSplits {
-    fn get_split(&mut self, rng: &mut ChaChaRng) -> Option<&str> {
+    fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection {
         let random: f64 = rng.gen();
         let random = random * self.total;
 
@@ -75,10 +83,10 @@ impl SplitSelector for RowSplits {
                 if split.done >= split.total {
                     self.total -= split.total;
                 }
-                return Some(split.name().as_ref());
+                return SplitSelection::Some(split.name().as_ref());
             }
         }
-        return None;
+        return SplitSelection::Done;
     }
 }
 
@@ -115,7 +123,7 @@ impl Deref for Splits {
 
 impl Splits {
     /// Get a random split.
-    pub fn get_split(&mut self, rng: &mut ChaChaRng) -> Option<&str> {
+    pub fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection {
         match self {
             Splits::Rows(rows) => rows.get_split(rng),
             Splits::Proportions(rows) => rows.get_split(rng),

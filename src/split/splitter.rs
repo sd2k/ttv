@@ -11,7 +11,7 @@ use crate::error::{Error, Result};
 use crate::io::open_data;
 use crate::split::{
     single::{ProportionSplit, RowSplit, Split, SplitEnum},
-    splits::Splits,
+    splits::{Splits, SplitSelection},
     writer::SplitWriter,
 };
 
@@ -264,13 +264,15 @@ impl Splitter {
             info!("Reading lines");
             for record in lines {
                 let split = self.splits.get_split(&mut self.rng);
-                if split.is_none() {
-                    break;
-                }
-                let split = split.unwrap();
-                match senders.get_mut(split).unwrap().send(record.unwrap()) {
-                    Ok(_) => progress[split].inc(1),
-                    Err(e) => return Err(e),
+                match split {
+                    SplitSelection::Some(split) => {
+                        match senders.get_mut(split).unwrap().send(record.unwrap()) {
+                            Ok(_) => progress[split].inc(1),
+                            Err(e) => return Err(e),
+                        }
+                    },
+                    SplitSelection::None => continue,
+                    SplitSelection::Done => break,
                 }
             }
             progress.values().for_each(|f| f.finish());
