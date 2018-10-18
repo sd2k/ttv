@@ -16,8 +16,6 @@ pub trait SplitSelector {
     fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection;
 }
 
-
-
 /// Splits defined using proportions.
 #[derive(Debug, Default)]
 pub struct ProportionSplits {

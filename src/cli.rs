@@ -25,7 +25,7 @@ pub struct Opt {
 pub enum Command {
     #[structopt(
         name = "split",
-        about = "Split dataset into two or more files for test/train/validation sets",
+        about = "Split dataset into two or more files for test/train/validation sets"
     )]
     Split(Split),
 }
@@ -38,7 +38,7 @@ pub struct Split {
         required_unless = "prop_splits",
         conflicts_with = "prop_splits",
         help = "Specify splits by number of rows",
-        use_delimiter = true,
+        use_delimiter = true
     )]
     pub row_splits: Vec<RowSplit>,
 
@@ -48,34 +48,34 @@ pub struct Split {
         required_unless = "row_splits",
         conflicts_with = "row_splits",
         help = "Specify splits by proportion of rows",
-        use_delimiter = true,
+        use_delimiter = true
     )]
     pub prop_splits: Vec<ProportionSplit>,
 
     #[structopt(
         short = "c",
         long = "chunk-size",
-        help = "Maximum number of rows per output chunk",
+        help = "Maximum number of rows per output chunk"
     )]
     pub chunk_size: Option<u64>,
 
     #[structopt(
         short = "t",
         long = "total-rows",
-        help = "Number of rows in input file. Used for progress when using proportion splits",
+        help = "Number of rows in input file. Used for progress when using proportion splits"
     )]
     pub total_rows: Option<u64>,
 
     #[structopt(
         short = "s",
         long = "seed",
-        help = "RNG seed, for reproducibility",
+        help = "RNG seed, for reproducibility"
     )]
     pub seed: Option<u64>,
 
     #[structopt(
         parse(from_os_str),
-        help = "Data to split, optionally gzip compressed. If '-', read from stdin",
+        help = "Data to split, optionally gzip compressed. If '-', read from stdin"
     )]
     pub input: PathBuf,
 
@@ -84,7 +84,7 @@ pub struct Split {
         long = "output-prefix",
         parse(from_os_str),
         raw(required_if = r#""input", "-""#),
-        help = "Output filename prefix. Only used if reading from stdin",
+        help = "Output filename prefix. Only used if reading from stdin"
     )]
     pub output_prefix: Option<PathBuf>,
 

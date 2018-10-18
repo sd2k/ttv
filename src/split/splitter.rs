@@ -11,7 +11,7 @@ use crate::error::{Error, Result};
 use crate::io::open_data;
 use crate::split::{
     single::{ProportionSplit, RowSplit, Split, SplitEnum},
-    splits::{Splits, SplitSelection},
+    splits::{SplitSelection, Splits},
     writer::SplitWriter,
 };
 
@@ -181,30 +181,34 @@ impl Splitter {
             None => self.input.clone(),
         };
         match &self.splits {
-            Splits::Proportions(p) => for split in p.iter() {
-                let split = SplitEnum::Proportion((*split).clone());
-                let (split_sender, mut split_chunk_writers) = SplitWriter::new(
-                    &output_path,
-                    &split,
-                    self.chunk_size,
-                    self.total_rows,
-                    self.compressed,
-                )?;
-                senders.insert(split.name().to_string(), split_sender);
-                chunk_writers.append(&mut split_chunk_writers);
-            },
-            Splits::Rows(r) => for split in r.iter() {
-                let split = SplitEnum::Rows((*split).clone());
-                let (split_sender, mut split_chunk_writers) = SplitWriter::new(
-                    &output_path,
-                    &split,
-                    self.chunk_size,
-                    self.total_rows,
-                    self.compressed,
-                )?;
-                senders.insert(split.name().to_string(), split_sender);
-                chunk_writers.append(&mut split_chunk_writers);
-            },
+            Splits::Proportions(p) => {
+                for split in p.iter() {
+                    let split = SplitEnum::Proportion((*split).clone());
+                    let (split_sender, mut split_chunk_writers) = SplitWriter::new(
+                        &output_path,
+                        &split,
+                        self.chunk_size,
+                        self.total_rows,
+                        self.compressed,
+                    )?;
+                    senders.insert(split.name().to_string(), split_sender);
+                    chunk_writers.append(&mut split_chunk_writers);
+                }
+            }
+            Splits::Rows(r) => {
+                for split in r.iter() {
+                    let split = SplitEnum::Rows((*split).clone());
+                    let (split_sender, mut split_chunk_writers) = SplitWriter::new(
+                        &output_path,
+                        &split,
+                        self.chunk_size,
+                        self.total_rows,
+                        self.compressed,
+                    )?;
+                    senders.insert(split.name().to_string(), split_sender);
+                    chunk_writers.append(&mut split_chunk_writers);
+                }
+            }
         };
 
         let pool = rayon::ThreadPoolBuilder::new()
@@ -270,7 +274,7 @@ impl Splitter {
                             Ok(_) => progress[split].inc(1),
                             Err(e) => return Err(e),
                         }
-                    },
+                    }
                     SplitSelection::None => continue,
                     SplitSelection::Done => break,
                 }

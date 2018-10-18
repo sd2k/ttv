@@ -13,9 +13,7 @@ pub type OutputWriter = Box<Write>;
 pub fn open_data<P: AsRef<Path>>(path: P) -> Result<InputReader> {
     // Read from stdin if input is '-', else try to open the provided file.
     let reader: Box<Read> = match path.as_ref().to_str() {
-        Some(p) if p == "-" => {
-            Box::new(std::io::stdin())
-        }
+        Some(p) if p == "-" => Box::new(std::io::stdin()),
         Some(p) => Box::new(File::open(p)?),
         _ => unreachable!(),
     };
