@@ -5,8 +5,8 @@ env:
     - RUST_BACKTRACE: full
 cache: cargo
 addons:
-  packages:
-    apt:
+  apt:
+    packages:
       # For building MUSL static builds on Linux.
       - musl-tools
 matrix:
