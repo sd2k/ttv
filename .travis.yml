@@ -1,21 +1,38 @@
 language: rust
-rust:
-- nightly
+env:
+  global:
+    - PROJECT_NAME: ttv
+    - RUST_BACKTRACE: full
 cache: cargo
-os:
-- linux
-- windows
-- osx
-script:
-- if [ "$TRAVIS_OS_NAME" == "windows" ]; then choco install llvm --norestart --nosilent;
-  fi
-- cargo build --verbose
-- cargo test --verbose
-- cargo build --verbose --release
+addons:
+  packages:
+    apt:
+      # For building MUSL static builds on Linux.
+      - musl-tools
+matrix:
+  fast_finish: true
+  include:
+    - os: linux
+      rust: nightly
+      env: TARGET=i686-unknown-linux-musl
+    - os: linux
+      rust: nightly
+      env: TARGET=x86_64-unknown-linux-musl
+    - os: osx
+      rust: nightly
+      env: TARGET=x86_64-apple-darwin
+    # We'll support Windows eventually...
+    # - os: windows
+    #   rust: nightly
+install: ci/install.sh
+script: ci/script.sh
+before_deploy: ci/before_deploy.sh
 deploy:
   provider: releases
+  file_glob: true
+  file: deployment/${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.tar.gz
+  skip_cleanup: true
   api_key:
     secure: G5Pu0aVbQysEll9zzXI/IX9PJ91jn9byIB7oSO+SPSVg1ikzcGoGz2VqBtgJsDo28y2XcqwE72FgYas0Ser3/r+Y/VN8fAgCsMXy0YtyKYlC0HI6KQudWh41UMb7lvJT4GUgUOONhXplkONvXAZPg40w4yvjHu0ddxgjseuCtKEOxO2ToQCsBPQmo8bOYGSYL5idKr7+fGJYVwNk+k0ITJAN5aAfsMzBD/Fgk+VfjZ/N5sLOJnfdvwEZWhoyKn6QE4gu92g4q2b1tqgEARrsxuMhwEDwG8frf3RkxXrQeeDvCcBgbfIEGpA9V8a1w7E1n6RWVMCo+erukl+UyAaFUgjV2t4OMgySvV0m5sdIVMB+fKF91AEUQLjJSXslSWW68Yvvsw2rRPdIrSFp24aS91c+ul8H1mll5TLh69S3Hfkk968wgZ4JF91AfajYIFScSfbsiP+TWYsEG4L1r9eLmByihQ8NbM27j6I9JGMh3Lt5VQCdg67EkiUNmf24r1XkT2YU7jZZWIFEllGSqSIl8mhy7hv4nVSM5IJBE0u1242pUqfXW6rU/SzC/YvSwSeTOuUGNOFqcmCQJgL6DGfRa6oc6Malm/uU+efE/nioftruqFrHzvJjAS7/+rGNFfhpkEleP0POmlpE5hqevFsWi+BnkNEwZkwJpICbzkkMu14=
-  file: target/release/ttv
   on:
     tags: true
