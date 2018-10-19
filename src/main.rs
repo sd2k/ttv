@@ -8,8 +8,13 @@ fn main() -> Result<()> {
     let opt = cli::Opt::from_args();
     match opt.cmd {
         cli::Command::Split(x) => {
-            let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits)?
-                .compressed(!x.uncompressed);
+            let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits)?;
+            if let Some(uncompressed) = x.uncompressed {
+                splitter = splitter.compressed(!uncompressed);
+            } else {
+                let should_compress = x.input.ends_with(".gz") | x.input.ends_with(".gzip");
+                splitter = splitter.compressed(should_compress);
+            }
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
             }

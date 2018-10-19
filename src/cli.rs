@@ -93,5 +93,5 @@ pub struct Split {
         long = "uncompressed",
         help = "Write output files uncompressed"
     )]
-    pub uncompressed: bool,
+    pub uncompressed: Option<bool>,
 }
