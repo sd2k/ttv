@@ -37,8 +37,10 @@ impl FromStr for ProportionSplit {
         let proportion = split[1]
             .parse::<f64>()
             .map_err(|_| Error::InvalidSplitSpecification(spec.to_string()))?;
-        if proportion <= 0.0 || proportion >= 1.0 {
-            return Err(Error::InvalidSplitSpecification(spec.to_string()));
+        if proportion <= 0.0 {
+            return Err(Error::ProportionTooLow(spec.to_string()));
+        } else if proportion >= 1.0 {
+            return Err(Error::ProportionTooHigh(spec.to_string()))
         }
         Ok(ProportionSplit {
             name: split[0].to_string(),

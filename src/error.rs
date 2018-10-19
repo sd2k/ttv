@@ -8,6 +8,10 @@ pub enum Error {
     EmptyFile,
     InvalidSplitSpecification(String),
     InvalidSplits(Vec<ProportionSplit>),
+
+    ProportionTooLow(String),
+    ProportionTooHigh(String),
+
     IoError(std::io::Error),
     ParseFloatError(std::num::ParseFloatError),
     ParseIntError(std::num::ParseIntError),
