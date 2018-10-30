@@ -7,5 +7,6 @@ mod split;
 
 pub use {
     crate::error::{Error, Result},
+    crate::io::Compression,
     crate::split::SplitterBuilder,
 };

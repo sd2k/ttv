@@ -10,7 +10,13 @@ use crate::error::Result;
 pub type InputReader = BufReader<Box<Read>>;
 pub type OutputWriter = Box<Write>;
 
-pub fn open_data<P: AsRef<Path>>(path: P) -> Result<InputReader> {
+#[derive(Clone, Copy, Debug)]
+pub enum Compression {
+    Uncompressed,
+    GzipCompression,
+}
+
+pub fn open_data<P: AsRef<Path>>(path: P, compression: Compression) -> Result<InputReader> {
     // Read from stdin if input is '-', else try to open the provided file.
     let reader: Box<Read> = match path.as_ref().to_str() {
         Some(p) if p == "-" => Box::new(std::io::stdin()),
@@ -18,22 +24,18 @@ pub fn open_data<P: AsRef<Path>>(path: P) -> Result<InputReader> {
         _ => unreachable!(),
     };
 
-    let gz = GzDecoder::new(reader);
-    let is_compressed = gz.header().is_some();
-    let final_reader: Box<Read> = if is_compressed {
-        Box::new(gz)
-    } else {
-        Box::new(gz.into_inner())
+    let reader: Box<Read> = match compression {
+        Compression::Uncompressed => Box::new(reader),
+        Compression::GzipCompression => Box::new(GzDecoder::new(reader)),
     };
-    Ok(BufReader::with_capacity(1024 * 1024, final_reader))
+    Ok(BufReader::with_capacity(1024 * 1024, reader))
 }
 
-pub fn open_output<P: AsRef<Path>>(path: P, compressed: bool) -> Result<OutputWriter> {
+pub fn open_output<P: AsRef<Path>>(path: P, compression: Compression) -> Result<OutputWriter> {
     let file = File::create(path)?;
-    let writer: OutputWriter = if compressed {
-        Box::new(GzEncoder::new(file, Default::default()))
-    } else {
-        Box::new(file)
+    let writer: OutputWriter = match compression {
+        Compression::GzipCompression => Box::new(GzEncoder::new(file, Default::default())),
+        Compression::Uncompressed => Box::new(file),
     };
     Ok(writer)
 }

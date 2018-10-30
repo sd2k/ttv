@@ -30,7 +30,7 @@ impl SplitWriter {
         split: &SplitEnum,
         chunk_size: Option<u64>,
         total_rows: Option<u64>,
-        compressed: bool,
+        compression: io::Compression,
     ) -> Result<(Self, Vec<ChunkWriter>)> {
         let n_chunks = match (split, chunk_size, total_rows) {
             // Just use one sender since there is no chunking required.
@@ -65,7 +65,7 @@ impl SplitWriter {
             let chunk_writer = ChunkWriter::new(
                 path.clone(),
                 split.name().to_string(),
-                compressed,
+                compression,
                 chunk_id,
                 chunk_size,
                 receiver,
@@ -123,7 +123,7 @@ impl SplitWriter {
 pub struct ChunkWriter {
     path: PathBuf,
     name: String,
-    compressed: bool,
+    compression: io::Compression,
     pub chunk_id: Option<u64>,
     pub chunk_size: Option<u64>,
     pub receiver: Receiver<String>,
@@ -133,7 +133,7 @@ impl ChunkWriter {
     fn new(
         path: PathBuf,
         name: String,
-        compressed: bool,
+        compression: io::Compression,
         chunk_id: Option<u64>,
         chunk_size: Option<u64>,
         receiver: Receiver<String>,
@@ -141,7 +141,7 @@ impl ChunkWriter {
         ChunkWriter {
             path,
             name,
-            compressed,
+            compression,
             chunk_id,
             chunk_size,
             receiver,
@@ -158,14 +158,18 @@ impl ChunkWriter {
             None => "".to_string(),
             Some(c) => format!(".{}", c.to_string().pad(4, '0', Alignment::Right, false)),
         };
+        let extension = match self.compression {
+            io::Compression::GzipCompression => ".gz",
+            io::Compression::Uncompressed => "",
+        };
         filename.push(format!(
             "{}.{}{}.csv{}",
             original_filename.to_string_lossy(),
             &self.name,
             chunk_part,
-            if self.compressed { ".gz" } else { "" },
+            extension,
         ));
-        io::open_output(filename, self.compressed)
+        io::open_output(filename, self.compression)
     }
     /// Handle writing of a row to this chunk.
     pub fn handle_row(&self, file: &mut io::OutputWriter, row: String) -> Result<()> {

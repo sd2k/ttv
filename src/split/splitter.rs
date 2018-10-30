@@ -8,7 +8,7 @@ use log::{debug, info};
 use rand::{prelude::*, prng::ChaChaRng};
 
 use crate::error::{Error, Result};
-use crate::io::open_data;
+use crate::io::{open_data, Compression};
 use crate::split::{
     single::{ProportionSplit, RowSplit, Split, SplitEnum},
     splits::{SplitSelection, Splits},
@@ -28,8 +28,10 @@ pub struct SplitterBuilder {
     chunk_size: Option<u64>,
     /// The total number of rows
     total_rows: Option<u64>,
-    /// Whether to compress output files
-    compressed: bool,
+    /// Compression for input files
+    input_compression: Compression,
+    /// Compression for output files
+    output_compression: Compression,
 }
 
 impl SplitterBuilder {
@@ -50,7 +52,8 @@ impl SplitterBuilder {
             output_prefix: None,
             chunk_size: None,
             total_rows: None,
-            compressed: false,
+            input_compression: Compression::GzipCompression,
+            output_compression: Compression::GzipCompression,
         })
     }
 
@@ -84,8 +87,13 @@ impl SplitterBuilder {
         self
     }
 
-    pub fn compressed(mut self, compressed: bool) -> Self {
-        self.compressed = compressed;
+    pub fn input_compression(mut self, input_compression: Compression) -> Self {
+        self.input_compression = input_compression;
+        self
+    }
+
+    pub fn output_compression(mut self, output_compression: Compression) -> Self {
+        self.output_compression = output_compression;
         self
     }
 
@@ -101,7 +109,8 @@ impl SplitterBuilder {
             output_prefix: self.output_prefix,
             chunk_size: self.chunk_size,
             total_rows: self.total_rows,
-            compressed: self.compressed,
+            input_compression: self.input_compression,
+            output_compression: self.output_compression,
         })
     }
 }
@@ -119,8 +128,10 @@ pub struct Splitter {
     chunk_size: Option<u64>,
     /// The total number of rows
     total_rows: Option<u64>,
-    /// Whether to compress output files
-    compressed: bool,
+    /// Compression for input files
+    input_compression: Compression,
+    /// Compression for output files
+    output_compression: Compression,
 }
 
 impl Splitter {
@@ -188,7 +199,7 @@ impl Splitter {
                         &split,
                         self.chunk_size,
                         self.total_rows,
-                        self.compressed,
+                        self.output_compression,
                     )?;
                     senders.insert(split.name().to_string(), split_sender);
                     chunk_writers.append(&mut split_chunk_writers);
@@ -202,7 +213,7 @@ impl Splitter {
                         &split,
                         self.chunk_size,
                         self.total_rows,
-                        self.compressed,
+                        self.output_compression,
                     )?;
                     senders.insert(split.name().to_string(), split_sender);
                     chunk_writers.append(&mut split_chunk_writers);
@@ -220,7 +231,7 @@ impl Splitter {
 
         pool.scope(move |scope| {
             info!("Reading data from {}", self.input.to_str().unwrap());
-            let reader = open_data(&self.input)?;
+            let reader = open_data(&self.input, self.input_compression)?;
 
             info!("Writing header to files");
             let mut lines = reader.lines();

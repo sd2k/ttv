@@ -1,7 +1,7 @@
 use env_logger;
 use structopt::StructOpt;
 
-use ttv::{cli, Result, SplitterBuilder};
+use ttv::{cli, Compression, Result, SplitterBuilder};
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -9,11 +9,11 @@ fn main() -> Result<()> {
     match opt.cmd {
         cli::Command::Split(x) => {
             let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits)?;
-            if let Some(uncompressed) = x.uncompressed {
-                splitter = splitter.compressed(!uncompressed);
-            } else {
-                let should_compress = x.input.ends_with(".gz") | x.input.ends_with(".gzip");
-                splitter = splitter.compressed(should_compress);
+            if x.uncompressed {
+                splitter = splitter.input_compression(Compression::Uncompressed);
+            }
+            if x.uncompressed_output {
+                splitter = splitter.output_compression(Compression::Uncompressed);
             }
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
