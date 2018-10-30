@@ -173,7 +173,6 @@ impl Splitter {
                 .collect()
         };
 
-        // Change this to create senders instead
         let mut senders = HashMap::new();
         let mut chunk_writers = Vec::new();
         let output_path = match self.output_prefix {
