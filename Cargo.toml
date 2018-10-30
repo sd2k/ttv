@@ -9,9 +9,8 @@ clap = { version = "2.32.0", features = ["yaml"] }
 env_logger = "0.5.13"
 flate2 = "1.0.4"
 indicatif = { git = "https://github.com/mitsuhiko/indicatif", rev = "0c3c0b5c" }
-log = "0.4.5"
+log = "0.4.6"
 pad = "0.1.5"
 rand = "0.5.5"
 rayon = "1.0.2"
-spmc = "0.2.2"
 structopt = "0.2.12"
