@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::convert::TryInto;
 use std::io::BufRead;
 use std::path::{Path, PathBuf};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::{debug, info};
 use rand::{prelude::*, prng::ChaChaRng};
+use try_from::TryInto;
 
 use crate::error::{Error, Result};
 use crate::io::{open_data, Compression};

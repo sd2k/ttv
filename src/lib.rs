@@ -1,4 +1,4 @@
-#![feature(int_to_from_bytes, try_from)]
+#![feature(int_to_from_bytes)]
 
 pub mod cli;
 mod error;

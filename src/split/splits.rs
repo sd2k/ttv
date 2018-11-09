@@ -1,7 +1,7 @@
-use std::convert::TryFrom;
 use std::ops::Deref;
 
 use rand::{prelude::*, prng::ChaChaRng};
+use try_from::TryFrom;
 
 use crate::error::{Error, Result};
 use crate::split::single::{ProportionSplit, RowSplit, Split};
@@ -44,7 +44,7 @@ impl Deref for ProportionSplits {
 }
 
 impl TryFrom<Vec<ProportionSplit>> for ProportionSplits {
-    type Error = Error;
+    type Err = Error;
     fn try_from(splits: Vec<ProportionSplit>) -> Result<Self> {
         let total = splits.iter().fold(0.0, |x, p| x + p.proportion);
         if total > 1.0 {
