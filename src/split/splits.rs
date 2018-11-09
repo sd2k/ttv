@@ -32,7 +32,7 @@ impl SplitSelector for ProportionSplits {
                 return SplitSelection::Some(&split.name());
             }
         }
-        return SplitSelection::None;
+        SplitSelection::None
     }
 }
 
@@ -81,10 +81,10 @@ impl SplitSelector for RowSplits {
                 if split.done >= split.total {
                     self.total -= split.total;
                 }
-                return SplitSelection::Some(split.name().as_ref());
+                return SplitSelection::Some(split.name());
             }
         }
-        return SplitSelection::Done;
+        SplitSelection::Done
     }
 }
 

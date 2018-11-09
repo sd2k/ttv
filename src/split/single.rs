@@ -20,7 +20,7 @@ pub struct ProportionSplit {
 
 impl Split for ProportionSplit {
     fn name(&self) -> &str {
-        return &self.name;
+        &self.name
     }
 }
 
@@ -63,7 +63,7 @@ pub struct RowSplit {
 
 impl Split for RowSplit {
     fn name(&self) -> &str {
-        return &self.name;
+        &self.name
     }
 }
 

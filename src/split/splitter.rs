@@ -240,7 +240,7 @@ impl Splitter {
                 Some(res) => res?,
             };
             for sender in senders.values_mut() {
-                sender.send_all(header.clone())?;
+                sender.send_all(&header)?;
             }
 
             scope.spawn(move |_| multi.join().unwrap());
@@ -267,7 +267,7 @@ impl Splitter {
                                 }
                             }
                             writer
-                                .handle_row(&mut file, row)
+                                .handle_row(&mut file, &row)
                                 .expect("Could not write row to file");
                             rows_sent_to_chunk += 1;
                         }
@@ -292,7 +292,7 @@ impl Splitter {
             progress.values().for_each(|f| f.finish());
             info!("Finished writing to files");
 
-            for sender in senders.values() {
+            for (_, sender) in senders {
                 sender.finish();
             }
             Ok(())

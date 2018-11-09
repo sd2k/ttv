@@ -25,7 +25,7 @@ pub(crate) struct SplitWriter {
 }
 
 impl SplitWriter {
-    pub fn new<'scope>(
+    pub fn new(
         path: &PathBuf,
         split: &SplitEnum,
         chunk_size: Option<u64>,
@@ -105,15 +105,15 @@ impl SplitWriter {
     /// Send a row to all splits.
     ///
     /// Used for the header row.
-    pub fn send_all(&mut self, row: String) -> Result<()> {
+    pub fn send_all(&mut self, row: &str) -> Result<()> {
         for sender in &self.chunk_senders {
-            sender.send(row.clone())?
+            sender.send(row.to_string())?
         }
         Ok(())
     }
 
-    pub fn finish(&self) {
-        for sender in &self.chunk_senders {
+    pub fn finish(self) {
+        for sender in self.chunk_senders {
             drop(sender);
         }
     }
@@ -172,7 +172,7 @@ impl ChunkWriter {
         io::open_output(filename, self.compression)
     }
     /// Handle writing of a row to this chunk.
-    pub fn handle_row(&self, file: &mut io::OutputWriter, row: String) -> Result<()> {
+    pub fn handle_row(&self, file: &mut io::OutputWriter, row: &str) -> Result<()> {
         file.write_all(row.as_bytes())?;
         file.write_all(b"\n")?;
         Ok(())
