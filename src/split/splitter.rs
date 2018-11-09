@@ -247,7 +247,7 @@ impl Splitter {
                         let mut file = writer.output(chunk_id).expect("Could not open file");
                         for row in writer.receiver.iter() {
                             if let Some(chunk_size) = writer.chunk_size {
-                                if rows_sent_to_chunk >= chunk_size {
+                                if rows_sent_to_chunk > chunk_size {
                                     // This should only ever happen if we weren't
                                     // able to pre-calculate how many chunks were
                                     // needed
