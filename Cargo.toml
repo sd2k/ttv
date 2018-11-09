@@ -12,5 +12,5 @@ indicatif = { git = "https://github.com/mitsuhiko/indicatif", rev = "0c3c0b5c" }
 log = "0.4.6"
 pad = "0.1.5"
 rand = "0.5.5"
-rayon = "1.0.2"
-structopt = "0.2.12"
+rayon = "1.0.3"
+structopt = "0.2.13"
