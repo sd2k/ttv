@@ -1,5 +1,3 @@
-#![feature(int_to_from_bytes)]
-
 pub mod cli;
 mod error;
 mod io;

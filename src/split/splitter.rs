@@ -21,7 +21,7 @@ pub struct SplitterBuilder {
     /// The desired splits
     splits: Splits,
     /// The seed used for randomisation
-    seed: Option<[u8; 32]>,
+    seed: Option<u64>,
     /// The prefix for the output file(s)
     output_prefix: Option<PathBuf>,
     /// The maximum size of each chunk
@@ -58,17 +58,7 @@ impl SplitterBuilder {
     }
 
     pub fn seed(mut self, seed: u64) -> Self {
-        let mut array: [u8; 32] = [0; 32];
-        let user_seed = seed.to_le_bytes();
-        array[0] = user_seed[0];
-        array[1] = user_seed[1];
-        array[2] = user_seed[2];
-        array[3] = user_seed[3];
-        array[4] = user_seed[4];
-        array[5] = user_seed[5];
-        array[6] = user_seed[6];
-        array[7] = user_seed[7];
-        self.seed = Some(array);
+        self.seed = Some(seed);
         self
     }
 
@@ -99,7 +89,7 @@ impl SplitterBuilder {
 
     pub fn build(self) -> Result<Splitter> {
         let rng = match self.seed {
-            Some(s) => ChaChaRng::from_seed(s),
+            Some(s) => ChaChaRng::seed_from_u64(s),
             None => ChaChaRng::from_entropy(),
         };
         Ok(Splitter {
