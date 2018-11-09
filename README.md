@@ -3,7 +3,7 @@ ttv - create train, test, validation sets
 
 ttv is a command line tool for splitting large files up into chunks suitable for train/test/validation splits for machine learning. It arose from the need to split files that were too large to fit into memory to split, and the desire to do it in a clean way.
 
-Currently ttv requires a nightly version of the Rust toolchain to build (it uses features of Rust 2018, and the `int_to_from_bytes` nightly feature). This will probably be relaxed soon.
+`ttv` requires Rust 2018.
 
 Installation
 ------------
