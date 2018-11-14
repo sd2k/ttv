@@ -245,15 +245,22 @@ impl Splitter {
                         let mut chunk_id = writer.chunk_id;
                         let mut rows_sent_to_chunk = 0;
                         let mut file = writer.output(chunk_id).expect("Could not open file");
+                        let mut header: Option<String> = None;
                         for row in writer.receiver.iter() {
+                            if header.is_none() {
+                                header = Some(row.clone());
+                            }
                             if let Some(chunk_size) = writer.chunk_size {
-                                if rows_sent_to_chunk > chunk_size {
+                                if rows_sent_to_chunk > (chunk_size + 1) { // add one for header
                                     // This should only ever happen if we weren't
                                     // able to pre-calculate how many chunks were
                                     // needed
                                     chunk_id = chunk_id.map(|c| c + 2);
                                     file = writer.output(chunk_id).expect("Could not open file");
-                                    rows_sent_to_chunk = 0;
+                                    writer
+                                        .handle_row(&mut file, header.as_ref().unwrap())
+                                        .expect("Could not write row to file");
+                                    rows_sent_to_chunk = 1;
                                 }
                             }
                             writer

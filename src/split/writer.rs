@@ -94,7 +94,7 @@ impl SplitWriter {
                 self.next_index += 1;
             }
             None => {
-                // Start again at the first next chunk
+                // Start again at the next chunk
                 self.chunk_senders[0].send(row)?;
                 self.next_index = 1;
             }
