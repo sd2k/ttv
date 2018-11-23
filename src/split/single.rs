@@ -39,7 +39,7 @@ impl FromStr for ProportionSplit {
             .map_err(|_| Error::InvalidSplitSpecification(spec.to_string()))?;
         if proportion <= 0.0 {
             return Err(Error::ProportionTooLow(spec.to_string()));
-        } else if proportion >= 1.0 {
+        } else if proportion > 1.0 {
             return Err(Error::ProportionTooHigh(spec.to_string()))
         }
         Ok(ProportionSplit {
