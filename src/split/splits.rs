@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
-use rand::{prelude::*, prng::ChaChaRng};
+use rand::prelude::*;
+use rand_chacha::ChaChaRng;
 use try_from::TryFrom;
 
 use crate::error::{Error, Result};
