@@ -8,7 +8,7 @@ edition = "2018"
 clap = { version = "2.32.0", features = ["yaml"] }
 env_logger = "0.6.0"
 flate2 = "1.0.5"
-indicatif = "0.10.0"
+indicatif = "0.11.0"
 log = "0.4.6"
 pad = "0.1.5"
 rand = "0.6.0"
