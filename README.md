@@ -1,3 +1,5 @@
+[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=sd2k/ttv)](https://dependabot.com)
+
 ttv - create train, test, validation sets
 =========================================
 
