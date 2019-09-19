@@ -111,7 +111,7 @@ pub enum Splits {
 }
 
 impl Deref for Splits {
-    type Target = SplitSelector;
+    type Target = dyn SplitSelector;
     fn deref(&self) -> &Self::Target {
         match self {
             Splits::Rows(r) => r,

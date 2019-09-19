@@ -7,8 +7,8 @@ use flate2::write::GzEncoder;
 
 use crate::error::Result;
 
-pub type InputReader = BufReader<Box<Read>>;
-pub type OutputWriter = Box<Write>;
+pub type InputReader = BufReader<Box<dyn Read>>;
+pub type OutputWriter = Box<dyn Write>;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Compression {
@@ -18,13 +18,13 @@ pub enum Compression {
 
 pub fn open_data<P: AsRef<Path>>(path: P, compression: Compression) -> Result<InputReader> {
     // Read from stdin if input is '-', else try to open the provided file.
-    let reader: Box<Read> = match path.as_ref().to_str() {
+    let reader: Box<dyn Read> = match path.as_ref().to_str() {
         Some(p) if p == "-" => Box::new(std::io::stdin()),
         Some(p) => Box::new(File::open(p)?),
         _ => unreachable!(),
     };
 
-    let reader: Box<Read> = match compression {
+    let reader: Box<dyn Read> = match compression {
         Compression::Uncompressed => Box::new(reader),
         Compression::GzipCompression => Box::new(GzDecoder::new(reader)),
     };

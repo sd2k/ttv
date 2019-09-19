@@ -40,7 +40,7 @@ impl FromStr for ProportionSplit {
         if proportion <= 0.0 {
             return Err(Error::ProportionTooLow(spec.to_string()));
         } else if proportion > 1.0 {
-            return Err(Error::ProportionTooHigh(spec.to_string()))
+            return Err(Error::ProportionTooHigh(spec.to_string()));
         }
         Ok(ProportionSplit {
             name: split[0].to_string(),
@@ -95,7 +95,7 @@ pub enum SplitEnum {
 }
 
 impl Deref for SplitEnum {
-    type Target = Split;
+    type Target = dyn Split;
     fn deref(&self) -> &Self::Target {
         match self {
             SplitEnum::Rows(r) => r,
