@@ -25,7 +25,7 @@ pub fn open_data<P: AsRef<Path>>(path: P, compression: Compression) -> Result<In
     };
 
     let reader: Box<dyn Read> = match compression {
-        Compression::Uncompressed => Box::new(reader),
+        Compression::Uncompressed => reader,
         Compression::GzipCompression => Box::new(GzDecoder::new(reader)),
     };
     Ok(BufReader::with_capacity(1024 * 1024, reader))
