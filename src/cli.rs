@@ -66,11 +66,7 @@ pub struct Split {
     )]
     pub total_rows: Option<u64>,
 
-    #[structopt(
-        short = "s",
-        long = "seed",
-        help = "RNG seed, for reproducibility"
-    )]
+    #[structopt(short = "s", long = "seed", help = "RNG seed, for reproducibility")]
     pub seed: Option<u64>,
 
     #[structopt(
@@ -83,7 +79,7 @@ pub struct Split {
         short = "o",
         long = "output-prefix",
         parse(from_os_str),
-        raw(required_if = r#""input", "-""#),
+        required_if("input", "-"),
         help = "Output filename prefix. Only used if reading from stdin"
     )]
     pub output_prefix: Option<PathBuf>,
@@ -95,9 +91,6 @@ pub struct Split {
     )]
     pub uncompressed: bool,
 
-    #[structopt(
-        long = "uncompressed-output",
-        help = "Don't compress output files"
-    )]
+    #[structopt(long = "uncompressed-output", help = "Don't compress output files")]
     pub uncompressed_output: bool,
 }
