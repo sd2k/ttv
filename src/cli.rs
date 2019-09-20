@@ -35,22 +35,22 @@ pub struct Split {
     #[structopt(
         short = "r",
         long = "rows",
-        required_unless = "prop_splits",
-        conflicts_with = "prop_splits",
+        required_unless = "prop",
+        conflicts_with = "prop",
         help = "Specify splits by number of rows",
         use_delimiter = true
     )]
-    pub row_splits: Vec<RowSplit>,
+    pub rows: Vec<RowSplit>,
 
     #[structopt(
         short = "p",
         long = "prop",
-        required_unless = "row_splits",
-        conflicts_with = "row_splits",
+        required_unless = "rows",
+        conflicts_with = "rows",
         help = "Specify splits by proportion of rows",
         use_delimiter = true
     )]
-    pub prop_splits: Vec<ProportionSplit>,
+    pub prop: Vec<ProportionSplit>,
 
     #[structopt(
         short = "c",
@@ -68,6 +68,12 @@ pub struct Split {
 
     #[structopt(short = "s", long = "seed", help = "RNG seed, for reproducibility")]
     pub seed: Option<u64>,
+
+    #[structopt(
+        long = "csv",
+        help = "Parse input as CSV. Only needed if rows contain embedded newlines - will impact performance."
+    )]
+    pub csv: bool,
 
     #[structopt(
         parse(from_os_str),

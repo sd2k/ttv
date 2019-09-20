@@ -174,7 +174,6 @@ impl ChunkWriter {
     /// Handle writing of a row to this chunk.
     pub fn handle_row(&self, file: &mut io::OutputWriter, row: &str) -> Result<()> {
         file.write_all(row.as_bytes())?;
-        file.write_all(b"\n")?;
         Ok(())
     }
 }

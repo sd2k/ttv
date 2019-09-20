@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::io::BufRead;
 use std::path::{Path, PathBuf};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -33,6 +32,8 @@ pub struct SplitterBuilder {
     input_compression: Compression,
     /// Compression for output files
     output_compression: Compression,
+    /// Is the input CSV?
+    csv: bool,
 }
 
 impl SplitterBuilder {
@@ -55,6 +56,7 @@ impl SplitterBuilder {
             total_rows: None,
             input_compression: Compression::GzipCompression,
             output_compression: Compression::GzipCompression,
+            csv: false,
         })
     }
 
@@ -88,6 +90,11 @@ impl SplitterBuilder {
         self
     }
 
+    pub fn csv(mut self, csv: bool) -> Self {
+        self.csv = csv;
+        self
+    }
+
     pub fn build(self) -> Result<Splitter> {
         let rng = match self.seed {
             Some(s) => ChaChaRng::seed_from_u64(s),
@@ -102,6 +109,7 @@ impl SplitterBuilder {
             total_rows: self.total_rows,
             input_compression: self.input_compression,
             output_compression: self.output_compression,
+            csv: self.csv,
         })
     }
 }
@@ -123,6 +131,8 @@ pub struct Splitter {
     input_compression: Compression,
     /// Compression for output files
     output_compression: Compression,
+    /// Is the input CSV?
+    csv: bool,
 }
 
 impl Splitter {
@@ -222,13 +232,19 @@ impl Splitter {
 
         pool.scope(move |scope| {
             info!("Reading data from {}", self.input.to_str().unwrap());
-            let reader = open_data(&self.input, self.input_compression)?;
+            let reader_builder = if self.csv {
+                let mut reader_builder = csv::ReaderBuilder::new();
+                reader_builder.has_headers(false);
+                Some(reader_builder)
+            } else {
+                None
+            };
+            let mut reader = open_data(&self.input, self.input_compression, reader_builder)?;
 
             info!("Writing header to files");
-            let mut lines = reader.lines();
-            let header = match lines.next() {
+            let header = match reader.read_line() {
+                Some(h) => h?,
                 None => return Err(Error::EmptyFile),
-                Some(res) => res?,
             };
             for sender in senders.values_mut() {
                 sender.send_all(&header)?;
@@ -252,7 +268,8 @@ impl Splitter {
                                 header = Some(row.clone());
                             }
                             if let Some(chunk_size) = writer.chunk_size {
-                                if rows_sent_to_chunk > (chunk_size + 1) { // add one for header
+                                if rows_sent_to_chunk > (chunk_size + 1) {
+                                    // add one for header
                                     // This should only ever happen if we weren't
                                     // able to pre-calculate how many chunks were
                                     // needed
@@ -274,7 +291,7 @@ impl Splitter {
             }
 
             info!("Reading lines");
-            for record in lines {
+            while let Some(record) = reader.read_line() {
                 let split = self.splits.get_split(&mut self.rng);
                 match split {
                     SplitSelection::Some(split) => {
