@@ -585,7 +585,7 @@ dependencies = [
 
 [[package]]
 name = "ttv"
-version = "0.2.2"
+version = "0.3.0"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "csv 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
