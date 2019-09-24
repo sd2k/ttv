@@ -12,6 +12,7 @@ pub enum Error {
     ProportionTooLow(String),
     ProportionTooHigh(String),
 
+    CsvError(csv::Error),
     IoError(std::io::Error),
     ParseFloatError(std::num::ParseFloatError),
     ParseIntError(std::num::ParseIntError),
@@ -35,6 +36,12 @@ impl From<std::num::ParseIntError> for Error {
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
         Error::IoError(error)
+    }
+}
+
+impl From<csv::Error> for Error {
+    fn from(error: csv::Error) -> Self {
+        Error::CsvError(error)
     }
 }
 

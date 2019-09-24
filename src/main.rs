@@ -8,12 +8,15 @@ fn main() -> Result<()> {
     let opt = cli::Opt::from_args();
     match opt.cmd {
         cli::Command::Split(x) => {
-            let mut splitter = SplitterBuilder::new(&x.input, x.row_splits, x.prop_splits)?;
+            let mut splitter = SplitterBuilder::new(&x.input, x.rows, x.prop)?;
             if x.uncompressed {
                 splitter = splitter.input_compression(Compression::Uncompressed);
             }
             if x.uncompressed_output {
                 splitter = splitter.output_compression(Compression::Uncompressed);
+            }
+            if x.csv {
+                splitter = splitter.csv(true);
             }
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
