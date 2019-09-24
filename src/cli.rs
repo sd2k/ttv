@@ -91,6 +91,10 @@ pub struct Split {
     )]
     pub uncompressed: bool,
 
-    #[structopt(long = "uncompressed-output", help = "Don't compress output files")]
+    #[structopt(
+        short = "U",
+        long = "uncompressed-output",
+        help = "Don't compress output files"
+    )]
     pub uncompressed_output: bool,
 }
