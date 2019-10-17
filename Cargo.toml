@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 clap = { version = "2.33.0", features = ["yaml"] }
 csv = "1.0.0"
-env_logger = "0.7.0"
+env_logger = "0.7.1"
 flate2 = "1.0.12"
 indicatif = "0.12.0"
 log = "0.4.8"
