@@ -3,8 +3,6 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, SyncSender};
 
-use pad::{Alignment, PadStr};
-
 use super::single::SplitEnum;
 use crate::error::Result;
 use crate::io;
@@ -156,7 +154,7 @@ impl ChunkWriter {
         create_dir_all(&filename)?;
         let chunk_part = match chunk_id {
             None => "".to_string(),
-            Some(c) => format!(".{}", c.to_string().pad(4, '0', Alignment::Right, false)),
+            Some(c) => format!(".{:0>4}", c),
         };
         let extension = match self.compression {
             io::Compression::GzipCompression => ".gz",
