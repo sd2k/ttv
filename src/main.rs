@@ -9,11 +9,11 @@ fn main() -> Result<()> {
     match opt.cmd {
         cli::Command::Split(x) => {
             let mut splitter = SplitterBuilder::new(&x.input, x.rows, x.prop)?;
-            if x.uncompressed {
-                splitter = splitter.input_compression(Compression::Uncompressed);
+            if x.decompress_input {
+                splitter = splitter.input_compression(Compression::GzipCompression);
             }
-            if x.uncompressed_output {
-                splitter = splitter.output_compression(Compression::Uncompressed);
+            if x.compress_output {
+                splitter = splitter.output_compression(Compression::GzipCompression);
             }
             if x.csv {
                 splitter = splitter.csv(true);

@@ -54,8 +54,8 @@ impl SplitterBuilder {
             output_prefix: None,
             chunk_size: None,
             total_rows: None,
-            input_compression: Compression::GzipCompression,
-            output_compression: Compression::GzipCompression,
+            input_compression: Compression::Uncompressed,
+            output_compression: Compression::Uncompressed,
             csv: false,
         })
     }

@@ -91,16 +91,16 @@ pub struct Split {
     pub output_prefix: Option<PathBuf>,
 
     #[structopt(
-        short = "u",
-        long = "uncompressed-input",
-        help = "Treat input as uncompressed"
+        short = "d",
+        long = "decompress-input",
+        help = "Decompress input from gzip format"
     )]
-    pub uncompressed: bool,
+    pub decompress_input: bool,
 
     #[structopt(
-        short = "U",
-        long = "uncompressed-output",
-        help = "Don't compress output files"
+        short = "C",
+        long = "compressed-output",
+        help = "Compress output files using gzip"
     )]
-    pub uncompressed_output: bool,
+    pub compress_output: bool,
 }
