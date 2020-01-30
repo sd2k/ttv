@@ -304,7 +304,7 @@ impl Splitter {
                     SplitSelection::Done => break,
                 }
             }
-            progress.values().for_each(|f| f.finish());
+            progress.values().for_each(|f| f.finish_at_current_pos());
             info!("Finished writing to files");
 
             for (_, sender) in senders {
