@@ -18,6 +18,9 @@ fn main() -> Result<()> {
             if x.csv {
                 splitter = splitter.csv(true);
             }
+            if x.no_header {
+                splitter = splitter.has_header(false);
+            }
             if let Some(seed) = x.seed {
                 splitter = splitter.seed(seed);
             }
