@@ -34,6 +34,10 @@ pub struct SplitterBuilder {
     output_compression: Compression,
     /// Is the input CSV?
     csv: bool,
+    /// Does the input have headers?
+    ///
+    /// Note: defaults to true.
+    has_header: bool,
 }
 
 impl SplitterBuilder {
@@ -57,6 +61,7 @@ impl SplitterBuilder {
             input_compression: Compression::Uncompressed,
             output_compression: Compression::Uncompressed,
             csv: false,
+            has_header: true,
         })
     }
 
@@ -95,6 +100,11 @@ impl SplitterBuilder {
         self
     }
 
+    pub fn has_header(mut self, has_header: bool) -> Self {
+        self.has_header = has_header;
+        self
+    }
+
     pub fn build(self) -> Result<Splitter> {
         let rng = match self.seed {
             Some(s) => ChaChaRng::seed_from_u64(s),
@@ -110,6 +120,7 @@ impl SplitterBuilder {
             input_compression: self.input_compression,
             output_compression: self.output_compression,
             csv: self.csv,
+            has_header: self.has_header,
         })
     }
 }
@@ -133,6 +144,10 @@ pub struct Splitter {
     output_compression: Compression,
     /// Is the input CSV?
     csv: bool,
+    /// Does the input have headers?
+    ///
+    /// Note: defaults to true.
+    has_header: bool,
 }
 
 impl Splitter {
@@ -241,16 +256,19 @@ impl Splitter {
             };
             let mut reader = open_data(&self.input, self.input_compression, reader_builder)?;
 
-            info!("Writing header to files");
-            let header = match reader.read_line() {
-                Some(h) => h?,
-                None => return Err(Error::EmptyFile),
-            };
-            for sender in senders.values_mut() {
-                sender.send_all(&header)?;
+            if self.has_header {
+                info!("Writing header to files");
+                let header = match reader.read_line() {
+                    Some(h) => h?,
+                    None => return Err(Error::EmptyFile),
+                };
+                for sender in senders.values_mut() {
+                    sender.send_all(&header)?;
+                }
             }
 
             scope.spawn(move |_| multi.join().unwrap());
+            let has_header = self.has_header;
             {
                 for writer in chunk_writers {
                     scope.spawn(move |_| {
@@ -262,23 +280,29 @@ impl Splitter {
                         let mut chunk_id = writer.chunk_id;
                         let mut rows_sent_to_chunk = 0;
                         let mut file = writer.output(chunk_id).expect("Could not open file");
-                        let mut header: Option<String> = None;
+                        let mut header: Header<String> = if has_header {
+                            Header::None
+                        } else {
+                            Header::Disabled
+                        };
                         for row in writer.receiver.iter() {
-                            if header.is_none() {
-                                header = Some(row.clone());
+                            if header == Header::None {
+                                header = Header::Some(row.clone());
                             }
                             if let Some(chunk_size) = writer.chunk_size {
-                                if rows_sent_to_chunk > (chunk_size + 1) {
+                                if rows_sent_to_chunk > (chunk_size) {
                                     // add one for header
                                     // This should only ever happen if we weren't
                                     // able to pre-calculate how many chunks were
                                     // needed
                                     chunk_id = chunk_id.map(|c| c + 2);
                                     file = writer.output(chunk_id).expect("Could not open file");
-                                    writer
-                                        .handle_row(&mut file, header.as_ref().unwrap())
-                                        .expect("Could not write row to file");
-                                    rows_sent_to_chunk = 1;
+                                    if let Header::Some(h) = header.as_ref() {
+                                        writer
+                                            .handle_row(&mut file, h)
+                                            .expect("Could not write row to file");
+                                    }
+                                    rows_sent_to_chunk = 1
                                 }
                             }
                             writer
@@ -313,5 +337,22 @@ impl Splitter {
             Ok(())
         })?;
         Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq)]
+enum Header<T> {
+    None,
+    Some(T),
+    Disabled,
+}
+
+impl Header<String> {
+    fn as_ref(&self) -> Header<&str> {
+        match self {
+            Header::None => Header::None,
+            Header::Disabled => Header::Disabled,
+            Header::Some(s) => Header::Some(s.as_str()),
+        }
     }
 }

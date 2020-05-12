@@ -53,6 +53,13 @@ pub struct Split {
     pub prop: Vec<ProportionSplit>,
 
     #[structopt(
+        short = "n",
+        long = "no-header",
+        help = "Don't treat the first row as a header"
+    )]
+    pub no_header: bool,
+
+    #[structopt(
         short = "c",
         long = "chunk-size",
         help = "Maximum number of rows per output chunk"
