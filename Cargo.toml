@@ -1,6 +1,6 @@
 [package]
 name = "ttv"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Ben Sully <ben@bsull.io>"]
 edition = "2018"
 
