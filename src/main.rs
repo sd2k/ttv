@@ -1,4 +1,3 @@
-use env_logger;
 use jemallocator::Jemalloc;
 use structopt::StructOpt;
 

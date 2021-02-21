@@ -195,7 +195,7 @@ impl Splitter {
                     pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
                     pb.set_message(&r.name());
                     pb.set_style(style);
-                    (r.name().to_string().clone(), pb)
+                    (r.name().to_string(), pb)
                 })
                 .collect()
         };
