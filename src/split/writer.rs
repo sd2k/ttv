@@ -1,6 +1,6 @@
 use std::fs::create_dir_all;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Receiver, SyncSender};
 
 use super::single::SplitEnum;
@@ -24,7 +24,7 @@ pub(crate) struct SplitWriter {
 
 impl SplitWriter {
     pub fn new(
-        path: &PathBuf,
+        path: &Path,
         split: &SplitEnum,
         chunk_size: Option<u64>,
         total_rows: Option<u64>,
@@ -61,7 +61,7 @@ impl SplitWriter {
                 Some(chunk_id as u64)
             };
             let chunk_writer = ChunkWriter::new(
-                path.clone(),
+                path.to_path_buf(),
                 split.name().to_string(),
                 compression,
                 chunk_id,

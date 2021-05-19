@@ -69,13 +69,9 @@ impl SplitSelector for RowSplits {
         let random = random * self.total;
 
         let mut total = 0.0;
-        let unfinished_splits: Vec<&mut RowSplit> = self
-            .splits
-            .iter_mut()
-            .filter(|s| s.done < s.total)
-            .collect();
+        let unfinished_splits = self.splits.iter_mut().filter(|s| s.done < s.total);
 
-        for split in unfinished_splits.into_iter() {
+        for split in unfinished_splits {
             total += split.total;
             if random < total {
                 split.done += 1.0;
