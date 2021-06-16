@@ -160,42 +160,45 @@ impl Splitter {
                 .splits
                 .iter()
                 .map(|p| {
+                    let name = p.name().to_string();
                     let style = ProgressStyle::default_bar()
                         .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/~{len:7} (ETA: {eta_precise})")
                         .progress_chars("█▉▊▋▌▍▎▏  ");
                     let split_total = p.proportion * t as f64;
                     let pb = multi.add(ProgressBar::new(split_total as u64));
-                    pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
-                    pb.set_message(&p.name());
+                    pb.set_draw_delta(10);
+                    pb.set_message(name.clone());
                     pb.set_style(style);
-                    (p.name().to_string(), pb)
+                    (name, pb)
                 })
                 .collect(),
             (Splits::Proportions(p), None) => p
                 .splits
                 .iter()
                 .map(|p| {
+                    let name = p.name().to_string();
                     let style = ProgressStyle::default_bar()
                         .template("{msg:<10}: [{elapsed_precise}] {spinner:.green} {pos:>7}");
                     let pb = multi.add(ProgressBar::new_spinner());
-                    pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
+                    pb.set_draw_delta(10);
                     pb.set_style(style);
-                    pb.set_message(&p.name());
-                    (p.name().to_string(), pb)
+                    pb.set_message(name.clone());
+                    (name, pb)
                 })
                 .collect(),
             (Splits::Rows(r), _) => r
                 .splits
                 .iter()
                 .map(|r| {
+                    let name = r.name().to_string();
                     let style = ProgressStyle::default_bar()
                         .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} (ETA: {eta_precise})")
                         .progress_chars("█▉▊▋▌▍▎▏  ");
                     let pb = multi.add(ProgressBar::new(r.total as u64));
-                    pb.set_draw_delta(10);  // uncomment when indicatif 0.9.1 is released
-                    pb.set_message(&r.name());
+                    pb.set_draw_delta(10);
+                    pb.set_message(name.clone());
                     pb.set_style(style);
-                    (r.name().to_string(), pb)
+                    (name, pb)
                 })
                 .collect()
         };
