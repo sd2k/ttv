@@ -10,7 +10,7 @@ edition = "2021"
 license = "MIT/Apache-2.0"
 
 [dependencies]
-clap = { version = "2.34.0", features = ["yaml"] }
+clap = { version = "3.0.6", features = ["derive", "yaml"] }
 csv = "1.1.6"
 env_logger = "0.9.0"
 flate2 = "1.0.22"
@@ -20,7 +20,7 @@ log = "0.4.14"
 rand = "0.8.4"
 rand_chacha = "0.3.1"
 rayon = "1.5.1"
-structopt = "0.3.25"
+thiserror = "1.0.30"
 
 [dev-dependencies]
 trycmd = "0.9.1"

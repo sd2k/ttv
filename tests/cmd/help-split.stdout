@@ -1,25 +1,43 @@
-ttv-split 0.4.0
+ttv-split 
 Split dataset into two or more files for test/train/validation sets
 
 USAGE:
-    ttv split [FLAGS] [OPTIONS] <input> --prop <prop>... --rows <rows>...
-
-FLAGS:
-    -C, --compressed-output    Compress output files using gzip
-        --csv                  Parse input as CSV. Only needed if rows contain embedded newlines - will impact
-                               performance.
-    -d, --decompress-input     Decompress input from gzip format
-    -h, --help                 Prints help information
-    -n, --no-header            Don't treat the first row as a header
-    -V, --version              Prints version information
-
-OPTIONS:
-    -c, --chunk-size <chunk-size>          Maximum number of rows per output chunk
-    -o, --output-prefix <output-prefix>    Output filename prefix. Only used if reading from stdin
-    -p, --prop <prop>...                   Specify splits by proportion of rows
-    -r, --rows <rows>...                   Specify splits by number of rows
-    -s, --seed <seed>                      RNG seed, for reproducibility
-    -t, --total-rows <total-rows>          Number of rows in input file. Used for progress when using proportion splits
+    ttv split [OPTIONS] <INPUT>
 
 ARGS:
-    <input>    Data to split, optionally gzip compressed. If '-', read from stdin
+    <INPUT>    Data to split, optionally gzip compressed. If '-', read from stdin
+
+OPTIONS:
+    -c, --chunk-size <CHUNK_SIZE>
+            Maximum number of rows per output chunk
+
+    -C, --compressed-output
+            Compress output files using gzip
+
+        --csv
+            Parse input as CSV. Only needed if rows contain embedded newlines - will impact
+            performance.
+
+    -d, --decompress-input
+            Decompress input from gzip format
+
+    -h, --help
+            Print help information
+
+    -n, --no-header
+            Don't treat the first row as a header
+
+    -o, --output-prefix <OUTPUT_PREFIX>
+            Output filename prefix. Only used if reading from stdin
+
+    -p, --prop <PROP>
+            Specify splits by proportion of rows
+
+    -r, --rows <ROWS>
+            Specify splits by number of rows
+
+    -s, --seed <SEED>
+            RNG seed, for reproducibility
+
+    -t, --total-rows <TOTAL_ROWS>
+            Number of rows in input file. Used for progress when using proportion splits

@@ -1,21 +1,31 @@
-use std::fmt;
+use thiserror::Error;
 
 use crate::split::ProportionSplit;
 
 /// Error type in ttv.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error("empty file")]
     EmptyFile,
+    #[error("invalid split specification: {0}")]
     InvalidSplitSpecification(String),
+    #[error("invalid splits: {0:?}")]
     InvalidSplits(Vec<ProportionSplit>),
 
+    #[error("proportion too low: {0}")]
     ProportionTooLow(String),
+    #[error("proportion too high: {0}")]
     ProportionTooHigh(String),
 
+    #[error("error parsing CSV: {0}")]
     CsvError(csv::Error),
+    #[error("I/O error: {0}")]
     IoError(std::io::Error),
+    #[error("error parsing float: {0}")]
     ParseFloatError(std::num::ParseFloatError),
+    #[error("error parsing int: {0}")]
     ParseIntError(std::num::ParseIntError),
+    #[error("internal error: {0}")]
     SendError(std::sync::mpsc::SendError<String>),
 }
 
@@ -48,11 +58,5 @@ impl From<csv::Error> for Error {
 impl From<std::sync::mpsc::SendError<String>> for Error {
     fn from(error: std::sync::mpsc::SendError<String>) -> Self {
         Error::SendError(error)
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
     }
 }
