@@ -1,0 +1,14 @@
+ttv 0.4.0
+Flexibly create test, train and validation sets
+
+USAGE:
+    ttv [FLAGS] <SUBCOMMAND>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+    -v               Set the level of verbosity
+
+SUBCOMMANDS:
+    help     Prints this message or the help of the given subcommand(s)
+    split    Split dataset into two or more files for test/train/validation sets
