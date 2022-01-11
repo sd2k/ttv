@@ -1,10 +1,10 @@
-// use jemallocator::Jemalloc;
 use clap::StructOpt;
+use jemallocator::Jemalloc;
 
 use ttv::{cli, Compression, Result, SplitterBuilder};
 
-// #[global_allocator]
-// static GLOBAL: Jemalloc = Jemalloc;
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
 
 fn main() -> Result<()> {
     env_logger::init();
