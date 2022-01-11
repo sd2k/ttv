@@ -65,41 +65,49 @@ impl SplitterBuilder {
         })
     }
 
+    #[must_use]
     pub fn seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
     }
 
+    #[must_use]
     pub fn output_prefix(mut self, output_prefix: PathBuf) -> Self {
         self.output_prefix = Some(output_prefix);
         self
     }
 
+    #[must_use]
     pub fn chunk_size(mut self, chunk_size: u64) -> Self {
         self.chunk_size = Some(chunk_size);
         self
     }
 
+    #[must_use]
     pub fn total_rows(mut self, total_rows: u64) -> Self {
         self.total_rows = Some(total_rows);
         self
     }
 
+    #[must_use]
     pub fn input_compression(mut self, input_compression: Compression) -> Self {
         self.input_compression = input_compression;
         self
     }
 
+    #[must_use]
     pub fn output_compression(mut self, output_compression: Compression) -> Self {
         self.output_compression = output_compression;
         self
     }
 
+    #[must_use]
     pub fn csv(mut self, csv: bool) -> Self {
         self.csv = csv;
         self
     }
 
+    #[must_use]
     pub fn has_header(mut self, has_header: bool) -> Self {
         self.has_header = has_header;
         self

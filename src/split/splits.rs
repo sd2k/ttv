@@ -30,7 +30,7 @@ impl SplitSelector for ProportionSplits {
         for split in &self.splits {
             total += split.proportion;
             if random < total {
-                return SplitSelection::Some(&split.name());
+                return SplitSelection::Some(split.name());
             }
         }
         SplitSelection::None
