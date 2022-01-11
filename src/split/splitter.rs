@@ -5,7 +5,6 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::{debug, info};
 use rand::prelude::*;
 use rand_chacha::ChaChaRng;
-use try_from::TryInto;
 
 use crate::error::{Error, Result};
 use crate::io::{open_data, Compression};
