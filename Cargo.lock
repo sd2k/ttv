@@ -801,9 +801,9 @@ dependencies = [
 
 [[package]]
 name = "trycmd"
-version = "0.10.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e3c0a3f7ab6ecc09e33166843b8bffdcb05bc01dc5468138b846adf9120dd4"
+checksum = "2900aa0cd96a7c0268e72307fd2a573d4d1db9bcc60b42551c798088e7d7461d"
 dependencies = [
  "concolor",
  "difflib",
