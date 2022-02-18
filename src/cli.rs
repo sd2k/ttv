@@ -38,7 +38,7 @@ pub struct Split {
         required_unless_present = "prop",
         conflicts_with = "prop",
         help = "Specify splits by number of rows",
-        use_delimiter = true
+        use_value_delimiter = true
     )]
     pub rows: Vec<RowSplit>,
 
@@ -48,7 +48,7 @@ pub struct Split {
         required_unless_present = "rows",
         conflicts_with = "rows",
         help = "Specify splits by proportion of rows",
-        use_delimiter = true
+        use_value_delimiter = true
     )]
     pub prop: Vec<ProportionSplit>,
 
