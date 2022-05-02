@@ -20,7 +20,7 @@ log = "0.4.16"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 rayon = "1.5.2"
-thiserror = "1.0.30"
+thiserror = "1.0.31"
 
 [dev-dependencies]
 trycmd = "0.13.3"
