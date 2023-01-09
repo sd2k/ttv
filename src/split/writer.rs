@@ -55,11 +55,7 @@ impl SplitWriter {
             let (sender, receiver) = std::sync::mpsc::sync_channel(100);
             chunk_senders.push(sender);
 
-            let chunk_id = if n_chunks == 1 {
-                None
-            } else {
-                Some(chunk_id)
-            };
+            let chunk_id = if n_chunks == 1 { None } else { Some(chunk_id) };
             let chunk_writer = ChunkWriter::new(
                 path.to_path_buf(),
                 split.name().to_string(),
