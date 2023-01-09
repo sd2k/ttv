@@ -58,7 +58,7 @@ impl SplitWriter {
             let chunk_id = if n_chunks == 1 {
                 None
             } else {
-                Some(chunk_id as u64)
+                Some(chunk_id)
             };
             let chunk_writer = ChunkWriter::new(
                 path.to_path_buf(),
@@ -154,7 +154,7 @@ impl ChunkWriter {
         create_dir_all(&filename)?;
         let chunk_part = match chunk_id {
             None => "".to_string(),
-            Some(c) => format!(".{:0>4}", c),
+            Some(c) => format!(".{c:0>4}"),
         };
         let extension = match self.compression {
             io::Compression::GzipCompression => ".gz",

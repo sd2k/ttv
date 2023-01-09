@@ -249,7 +249,7 @@ impl Splitter {
 
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(chunk_writers.len() + 2)
-            .thread_name(|num| format!("thread-{}", num))
+            .thread_name(|num| format!("thread-{num}"))
             .start_handler(|num| debug!("thread {} starting", num))
             .exit_handler(|num| debug!("thread {} finishing", num))
             .build()
