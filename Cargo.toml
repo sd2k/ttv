@@ -23,4 +23,4 @@ rayon = "1.7.0"
 thiserror = "1.0.40"
 
 [dev-dependencies]
-trycmd = "0.14.11"
+trycmd = "0.14.16"
