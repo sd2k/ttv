@@ -170,10 +170,10 @@ impl Splitter {
                     let name = p.name().to_string();
                     let style = ProgressStyle::default_bar()
                         .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/~{len:7} (ETA: {eta_precise})")
+                        .expect("valid indicatif template")
                         .progress_chars("█▉▊▋▌▍▎▏  ");
                     let split_total = p.proportion * t as f64;
                     let pb = multi.add(ProgressBar::new(split_total as u64));
-                    pb.set_draw_delta(10);
                     pb.set_message(name.clone());
                     pb.set_style(style);
                     (name, pb)
@@ -185,9 +185,9 @@ impl Splitter {
                 .map(|p| {
                     let name = p.name().to_string();
                     let style = ProgressStyle::default_bar()
-                        .template("{msg:<10}: [{elapsed_precise}] {spinner:.green} {pos:>7}");
+                        .template("{msg:<10}: [{elapsed_precise}] {spinner:.green} {pos:>7}")
+                        .expect("valid indicatif template");
                     let pb = multi.add(ProgressBar::new_spinner());
-                    pb.set_draw_delta(10);
                     pb.set_style(style);
                     pb.set_message(name.clone());
                     (name, pb)
@@ -200,9 +200,9 @@ impl Splitter {
                     let name = r.name().to_string();
                     let style = ProgressStyle::default_bar()
                         .template("{msg:<10}: [{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} (ETA: {eta_precise})")
+                        .expect("valid indicatif template")
                         .progress_chars("█▉▊▋▌▍▎▏  ");
                     let pb = multi.add(ProgressBar::new(r.total as u64));
-                    pb.set_draw_delta(10);
                     pb.set_message(name.clone());
                     pb.set_style(style);
                     (name, pb)
@@ -277,7 +277,6 @@ impl Splitter {
                 }
             }
 
-            scope.spawn(move |_| multi.join().unwrap());
             let has_header = self.has_header;
             {
                 for writer in chunk_writers {
@@ -338,7 +337,7 @@ impl Splitter {
                     SplitSelection::Done => break,
                 }
             }
-            progress.values().for_each(|f| f.finish_at_current_pos());
+            progress.values().for_each(|f| f.finish());
             info!("Finished writing to files");
 
             for (_, sender) in senders {
