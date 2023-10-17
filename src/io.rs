@@ -40,7 +40,7 @@ impl LineReader for BufReader<Box<dyn Read>> {
     fn read_line(&mut self) -> Option<Result<String>> {
         let mut buf = String::with_capacity(1024);
         match std::io::BufRead::read_line(self, &mut buf) {
-            Ok(n) if n == 0 => None,
+            Ok(0) => None,
             Ok(_) => Some(Ok(buf)),
             Err(e) => Some(Err(e.into())),
         }
@@ -54,7 +54,7 @@ pub fn open_data<P: AsRef<Path>>(
 ) -> Result<Box<dyn LineReader>> {
     // Read from stdin if input is '-', else try to open the provided file.
     let reader: Box<dyn Read> = match path.as_ref().to_str() {
-        Some(p) if p == "-" => Box::new(std::io::stdin()),
+        Some("-") => Box::new(std::io::stdin()),
         Some(p) => Box::new(File::open(p)?),
         _ => unreachable!(),
     };
