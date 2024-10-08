@@ -31,7 +31,7 @@ Run `ttv --help` to get help, or infer what you can from one of these examples:
 
     # Accepts data from stdin, compressed or not (must give a filename)
     $ cat data.csv | ttv split --rows=test=10000,train=90000 --output-prefix data -u
-    $ cat data.csv.gz | ttv split --rows=test=10000,train=90000 --output-prefix data
+    $ cat data.csv.gz | ttv split --rows=test=10000,train=90000 --output-prefix data -d
 
     # Using pigz for faster decompression
     $ pigz -dc data.csv.gz | ttv split --prop=test=0.1,train=0.9 --chunk-size 5000 --output-prefix data
