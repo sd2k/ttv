@@ -37,7 +37,7 @@ Run `ttv --help` to get help, or infer what you can from one of these examples:
     $ pigz -dc data.csv.gz | ttv split --prop=test=0.1,train=0.9 --chunk-size 5000 --output-prefix data
 
     # Split outputs into chunks for faster writing/reading later
-    $ ttv split data.csv.gz --rows=test=100000,train=900000 --chunk-size 5000
+    $ ttv split data.csv.gz --rows=test=100000,train=900000 --chunk-size 5000 -d
 
     # Write outputs uncompressed
     $ ttv split data.csv.gz --prop=test=0.5,train=0.5
