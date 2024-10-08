@@ -21,7 +21,7 @@ Run `ttv --help` to get help, or infer what you can from one of these examples:
     $ ttv split data.csv --rows=train=9000 --rows=test=1000
 
     # Accepts gzipped data (no flag required). Shorthand argument version. As many splits as you like!
-    $ ttv split data.csv.gz --rows=train=65000,validation=15000,test=15000
+    $ ttv split data.csv.gz --rows=train=65000,validation=15000,test=15000 -d
 
     # Alternatively, specify proportion-based splits.
     $ ttv split data.csv --prop=train=0.8,test=0.2
