@@ -43,7 +43,7 @@ Run `ttv --help` to get help, or infer what you can from one of these examples:
     $ ttv split data.csv.gz --prop=test=0.5,train=0.5
 
     # Reproducible splits using seed
-    $ ttv split data.csv.gz --prop=test=0.5,train=0.5 --chunk-size 1000 --seed 5330
+    $ ttv split data.csv.gz --prop=test=0.5,train=0.5 --chunk-size 1000 --seed 5330 -d
 
 Development
 -----------
