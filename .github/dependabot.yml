@@ -9,3 +9,7 @@ updates:
   - sd2k
   assignees:
   - sd2k
+  groups:
+    rust-dependencies:
+      patterns:
+        - "*"
