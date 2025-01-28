@@ -115,7 +115,7 @@ impl SplitterBuilder {
     pub fn build(self) -> Result<Splitter> {
         let rng = match self.seed {
             Some(s) => ChaChaRng::seed_from_u64(s),
-            None => ChaChaRng::from_entropy(),
+            None => ChaChaRng::from_os_rng(),
         };
         Ok(Splitter {
             input: self.input,
