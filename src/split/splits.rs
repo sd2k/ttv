@@ -24,7 +24,7 @@ pub struct ProportionSplits {
 
 impl SplitSelector for ProportionSplits {
     fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection {
-        let random: f64 = rng.gen();
+        let random: f64 = rng.random();
         let mut total = 0.0;
         for split in &self.splits {
             total += split.proportion;
@@ -64,7 +64,7 @@ pub struct RowSplits {
 
 impl SplitSelector for RowSplits {
     fn get_split(&mut self, rng: &mut ChaChaRng) -> SplitSelection {
-        let random: f64 = rng.gen();
+        let random: f64 = rng.random();
         let random = random * self.total;
 
         let mut total = 0.0;
