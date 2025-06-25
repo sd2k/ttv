@@ -1,4 +1,4 @@
-use clap::StructOpt;
+use clap::Parser;
 use jemallocator::Jemalloc;
 
 use ttv::{cli, Compression, Result, SplitterBuilder};
@@ -8,7 +8,7 @@ static GLOBAL: Jemalloc = Jemalloc;
 
 fn main() -> Result<()> {
     env_logger::init();
-    let opt = cli::Opt::parse();
+    let opt = cli::Args::parse();
     match opt.cmd {
         cli::Command::Split(x) => {
             let mut splitter = SplitterBuilder::new(&x.input, x.rows, x.prop)?;
