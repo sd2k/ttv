@@ -1,27 +1,27 @@
 use std::path::PathBuf;
 
-use clap::StructOpt;
+use clap::Parser;
 
 use crate::split::{ProportionSplit, RowSplit};
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 #[clap(
     name = "ttv",
     about = "Flexibly create test, train and validation sets"
 )]
-pub struct Opt {
+pub struct Args {
     #[clap(
-        parse(from_occurrences),
         short = 'v',
-        help = "Set the level of verbosity"
+        help = "Set the level of verbosity",
+        action = clap::ArgAction::Count
     )]
-    pub verbose: u64,
+    pub verbose: u8,
 
     #[clap(subcommand)]
     pub cmd: Command,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub enum Command {
     #[clap(
         name = "split",
@@ -30,7 +30,7 @@ pub enum Command {
     Split(Split),
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 pub struct Split {
     #[clap(
         short = 'r',
@@ -82,16 +82,12 @@ pub struct Split {
     )]
     pub csv: bool,
 
-    #[clap(
-        parse(from_os_str),
-        help = "Data to split, optionally gzip compressed. If '-', read from stdin"
-    )]
+    #[clap(help = "Data to split, optionally gzip compressed. If '-', read from stdin")]
     pub input: PathBuf,
 
     #[clap(
         short = 'o',
         long = "output-prefix",
-        parse(from_os_str),
         required_if_eq("input", "-"),
         help = "Output filename prefix. Only used if reading from stdin"
     )]
